@@ -26,26 +26,25 @@ module.exports = {
 
         await client.db("mobile").collection("users")
             .updateOne({ _id: _id }, { $push: { favorites: new ObjectID(id) } });
-
     },
 
 
 
-  addCart: async (_id, id) => {
+    addCart: async (_id, id) => {
 
-    const cartExists = await client.db("mobile").collection("Cartmobile").findOne({ _id: _id, "cart._id": new ObjectID(id) });
-
-    if (cartExists) {
-      await client.db("mobile").collection("Cartmobile").updateOne(
-        { _id: _id, "cart._id": new ObjectID(id) },
-        { $inc: { "cart.$.count": 1 } } 
-      );
-    } else {
-      await client.db("mobile").collection("Cartmobile").updateOne(
-        { _id: _id },
-        { $push: { cart: { _id: new ObjectID(id), count: 1 } } }
-      );
-    }
+        const cartExists = await client.db("mobile").collection("Cartmobile").findOne({ _id: _id, "cart._id": new ObjectID(id) });
+       
+        if (cartExists) {
+            await client.db("mobile").collection("Cartmobile").updateOne(
+                { _id: _id, "cart._id": new ObjectID(id) },
+                { $inc: { "cart.$.count": 1 } }
+            );
+        } else {
+            await client.db("mobile").collection("Cartmobile").updateOne(
+                { _id: _id },
+                { $push: { cart: { _id: new ObjectID(id), count: 1 } } }
+            );
+        }
     },
 
 
@@ -54,10 +53,10 @@ module.exports = {
     addUser: async (firstname, lastname, email, username, password) => {
 
         await client.db("mobile").collection("Cartmobile").insertOne({ cart: [] });
-        const cartId  = await client.db("mobile").collection("Cartmobile").find().sort({ _id: -1 }).limit(1).toArray();
+        const cartId = await client.db("mobile").collection("Cartmobile").find().sort({ _id: -1 }).limit(1).toArray();
 
         const result = await client.db("mobile").collection("users")
-            .insertOne({ firstname, lastname, email, username, password, favorites: [], cart: [cartId [0]._id] });
+            .insertOne({ firstname, lastname, email, username, password, favorites: [], cart: [cartId[0]._id] });
 
         return result;
     },
@@ -72,17 +71,23 @@ module.exports = {
 
     localStorage: async (_id) => {
 
-        return await client.db("mobile").collection("users").findOne({ _id });
+        const user = await client.db("mobile").collection("users").findOne({ _id });
+
+        if (user) {
+            return user;
+        } else {
+            return null; // Return null if the user is not found
+        }
     },
 
 
-    getCart: async (_id) => {
+    MobileDetails: async (_id) => {
         return await client.db("mobile").collection("Cartmobile").aggregate([
             {
                 $match: {
-                  _id: new ObjectID(_id),
+                    _id: new ObjectID(_id),
                 },
-              },
+            },
             {
                 $lookup:
                 {
@@ -90,54 +95,58 @@ module.exports = {
                     localField: "cart._id",
                     foreignField: "_id",
                     as: "cart"
-      
+
                 }
             }
         ]).toArray();
     },
 
-    deleteFromcart: async (_id, id) => {
+    getCart: async (_id) => {
+    return await client.db("mobile").collection("Cartmobile").findOne({ _id });
+    },
 
-        return await client.db("mobile").collection("users").aggregate([
+    deleteFromcart: async (_id, id) => {
+        const result = await client.db("mobile").collection("Cartmobile").aggregate([
             {
                 $match: { _id: new ObjectID(_id) }
             },
             {
                 $project: {
                     cartIndex: {
-                        $indexOfArray: ["$cart", new ObjectID(id)]
-                    }
+                        $indexOfArray: ["$cart._id", new ObjectID(id)]
+                    },
+                    itemCount: { $arrayElemAt: ["$cart.count", { $indexOfArray: ["$cart._id", new ObjectID(id)] }] }
                 }
             }
         ]).toArray();
 
-
+        return result;
     },
 
 
-
-    deletecart: async (_id, cartIndex) => {
-
-        await client.db("mobile").collection("users").updateOne(
+    deleteObjectcart: async (_id, cartIndex) => {
+        await client.db("mobile").collection("Cartmobile").updateOne(
             { _id: new ObjectID(_id) },
             {
                 $unset: { [`cart.${cartIndex}`]: 1 }
             }
         );
-
-        await client.db("mobile").collection("users").updateOne(
+        await client.db("mobile").collection("Cartmobile").updateOne(
             { _id: new ObjectID(_id) },
             {
                 $pull: { cart: null }
             }
         );
 
-
     },
 
-
-
-
-
+    cartUpdate: async (_id, id, count) => {
+        await client.db("mobile").collection("Cartmobile").updateOne(
+            { _id: new ObjectID(_id), "cart._id": new ObjectID(id) },
+            { 
+                $set: { "cart.$.count": count } 
+              }
+        );
+    }
 
 }

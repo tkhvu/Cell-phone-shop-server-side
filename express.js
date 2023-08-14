@@ -7,11 +7,29 @@ const client = new MongoClient("mongodb+srv://tkhvu3552:a303095483@cluster0.92qu
 const cors = require('cors');
 app.use(cors());
 app.use('/', router);
-const { getMobile, userMatch, addFavorites, addUser, localStorage, addCart, deleteFromcart, deleteFavorites, getCart, deletecart } = require("./repository");
+app.use(express.json());
+const { getMobile, userMatch, addFavorites, addUser, localStorage, addCart, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate } = require("./repository");
 
 
 
-router.get('/getcart', async (req, res) => {
+router.get('/MobileDetails', async (req, res) => {
+
+  try {
+    let _id = req.query._id;
+    const cart = await MobileDetails(new ObjectID(_id));
+    if (cart) {
+      res.status(200).json(cart);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
+
+router.get('/getCart', async (req, res) => {
 
   try {
     let _id = req.query._id;
@@ -26,6 +44,7 @@ router.get('/getcart', async (req, res) => {
     res.status(500).json({ error: e.message })
   }
 })
+
 
 
 
@@ -59,11 +78,12 @@ router.get('/addCart', async (req, res) => {
 })
 
 
-router.post('/CreatingUser', async (req, res) => {
+app.post('/CreatingUser', async (req, res) => {
 
   try {
-    const { firstname, lastname, email, username, password } = req.body;
+    const { firstname , lastname, email, username, password } = req.body;
     const result = await addUser(firstname, lastname, email, username, password);
+    console.log(result)
     if (result) {
       res.status(200).json(result);
     } else {
@@ -148,21 +168,59 @@ router.get('/deleteFromcart', async (req, res) => {
 
   let _id = req.query._id;
   let id = req.query.id;
- 
+
 
   try {
     const result = await deleteFromcart(_id, id)
-
     if (result.length > 0) {
-      const cartIndex = result[0].cartIndex;
-
+      const { cartIndex, itemCount } = result[0];
+      if (itemCount > 1) {
+        await cartUpdate(_id, id)
+      } else {
       if (cartIndex >= 0) {
-        await deletecart(_id, cartIndex )
-    
+        await deleteObjectcart(_id, cartIndex)
+
         res.status(200).json({ message: "Item removed from cart." });
       } else {
         res.status(404).json({ message: "Item not found in cart." });
       }
+    }
+    } else {
+      res.status(404).json({ message: "User not found." });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+
+})
+
+
+router.get('/cartUpdate', async (req, res) => {
+
+  let _id = req.query._id;
+  let id = req.query.id;
+  let count = req.query.count
+
+
+  try {
+    const result = await deleteFromcart(_id, id)
+    if (result.length > 0) {
+      const { cartIndex} = result[0];
+      if (count > 1) {
+        await cartUpdate(_id, id, count)
+        console.log("if===", count)
+      } else {
+      if (cartIndex >= 0) {
+        console.log( count)
+
+        await deleteObjectcart(_id, cartIndex)
+
+        res.status(200).json({ message: "Item removed from cart." });
+      } else {
+        res.status(404).json({ message: "Item not found in cart." });
+      }
+    }
     } else {
       res.status(404).json({ message: "User not found." });
     }
@@ -176,4 +234,4 @@ router.get('/deleteFromcart', async (req, res) => {
 
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`listening on ${PORT}`));
+app.listen(PORT);
