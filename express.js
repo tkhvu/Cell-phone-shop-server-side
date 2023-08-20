@@ -9,6 +9,29 @@ app.use(cors());
 app.use('/', router);
 app.use(express.json());
 const { getMobile, userMatch, addFavorites, addUser, localStorage, addCart, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate } = require("./repository");
+const { SENDMAIL } = require("./email");
+
+
+app.post('/MobileDet', (req, res) => {
+  try {
+    const { firstname, lastname, email} = req.body.user[0];
+    // const {  name, price } = req.body.orders[0];
+    const orderedPhoneDetails = req.body.orders; // Assuming this is an array of phone objects
+
+    const { phone, City, Street, Housenumber, Apartmentnumber} = req.body.DeliveryDetails;
+    
+//     const orderedPhonePrices = orders.map(order => order.price).join(', ');
+//     const orderedPhoneNames = orders.map(order => order.name).join(', ');
+// console.log(orderedPhoneNames)
+// console.log(orderedPhonePrices)
+
+    SENDMAIL(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 
 
@@ -81,7 +104,7 @@ router.get('/addCart', async (req, res) => {
 app.post('/CreatingUser', async (req, res) => {
 
   try {
-    const { firstname , lastname, email, username, password } = req.body;
+    const { firstname, lastname, email, username, password } = req.body;
     const result = await addUser(firstname, lastname, email, username, password);
     console.log(result)
     if (result) {
@@ -177,14 +200,14 @@ router.get('/deleteFromcart', async (req, res) => {
       if (itemCount > 1) {
         await cartUpdate(_id, id)
       } else {
-      if (cartIndex >= 0) {
-        await deleteObjectcart(_id, cartIndex)
+        if (cartIndex >= 0) {
+          await deleteObjectcart(_id, cartIndex)
 
-        res.status(200).json({ message: "Item removed from cart." });
-      } else {
-        res.status(404).json({ message: "Item not found in cart." });
+          res.status(200).json({ message: "Item removed from cart." });
+        } else {
+          res.status(404).json({ message: "Item not found in cart." });
+        }
       }
-    }
     } else {
       res.status(404).json({ message: "User not found." });
     }
@@ -206,21 +229,21 @@ router.get('/cartUpdate', async (req, res) => {
   try {
     const result = await deleteFromcart(_id, id)
     if (result.length > 0) {
-      const { cartIndex} = result[0];
+      const { cartIndex } = result[0];
       if (count > 1) {
         await cartUpdate(_id, id, count)
         console.log("if===", count)
       } else {
-      if (cartIndex >= 0) {
-        console.log( count)
+        if (cartIndex >= 0) {
+          console.log(count)
 
-        await deleteObjectcart(_id, cartIndex)
+          await deleteObjectcart(_id, cartIndex)
 
-        res.status(200).json({ message: "Item removed from cart." });
-      } else {
-        res.status(404).json({ message: "Item not found in cart." });
+          res.status(200).json({ message: "Item removed from cart." });
+        } else {
+          res.status(404).json({ message: "Item not found in cart." });
+        }
       }
-    }
     } else {
       res.status(404).json({ message: "User not found." });
     }
