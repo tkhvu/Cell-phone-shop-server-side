@@ -11,12 +11,12 @@ const transporter = nodemailer.createTransport({
 
 const mailOptions = [
     {
-        to: 'tkhvu3552@gmail.com', // First recipient email
-        subject: 'הזמנה חדשה - כתותרת ראשונה', // First subject
+        to: 'tkhvu3552@gmail.com', 
+        subject: 'הזמנה חדשה - כותרת ראשונה', 
     },
     {
-        to: 'perly.kar@gmail.com', // Second recipient email
-        subject: 'הזמנה חדשה - נוספה במערכת ', // Second subject
+        to: 'perly.kar@gmail.com', 
+        subject: 'הזמנה חדשה - נוספה במערכת ', 
     },
 ];
 
@@ -31,6 +31,18 @@ function calculateTotalCost(orderedPhoneDetails) {
 
 
 const SENDMAIL = (firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber) => {
+    const mailOptions = [
+        {
+            to: 'tkhvu3552@gmail.com', 
+            subject: 'הזמנה חדשה - כותרת ראשונה', 
+        },
+        {
+            to: email, 
+            subject: 'הזמנה חדשה - נוספה במערכת ', 
+        },
+    ];
+    
+    
     mailOptions.forEach(options => {transporter.sendMail(
         {
             from: 'a0548453356@gmail.com',

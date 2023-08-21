@@ -12,18 +12,11 @@ const { getMobile, userMatch, addFavorites, addUser, localStorage, addCart, dele
 const { SENDMAIL } = require("./email");
 
 
-app.post('/MobileDet', (req, res) => {
+app.post('/Emailorderconfirmation', (req, res) => {
   try {
     const { firstname, lastname, email} = req.body.user[0];
-    // const {  name, price } = req.body.orders[0];
-    const orderedPhoneDetails = req.body.orders; // Assuming this is an array of phone objects
-
+    const orderedPhoneDetails = req.body.orders; 
     const { phone, City, Street, Housenumber, Apartmentnumber} = req.body.DeliveryDetails;
-    
-//     const orderedPhonePrices = orders.map(order => order.price).join(', ');
-//     const orderedPhoneNames = orders.map(order => order.name).join(', ');
-// console.log(orderedPhoneNames)
-// console.log(orderedPhonePrices)
 
     SENDMAIL(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
     res.status(200).json({ message: 'Email sent successfully' });
