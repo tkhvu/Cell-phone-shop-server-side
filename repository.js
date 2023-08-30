@@ -147,6 +147,17 @@ module.exports = {
                 $set: { "cart.$.count": count } 
               }
         );
-    }
+    },
+    
+
+    addProduct: async (selectedFileBase64, name, price, category) => {
+        const result = await client.db("mobile").collection(`${category}`).insertOne({
+          image: selectedFileBase64,
+          name: name,
+          price: price,
+          category: new ObjectID("64e711e3bc535c0b1cb7c2d8")
+        });
+        return result;
+      }
 
 }

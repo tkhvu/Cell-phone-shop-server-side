@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require('express');
 const app = express()
 const router = express.Router();
 const { MongoClient } = require('mongodb');
@@ -8,15 +8,29 @@ const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, userMatch, addFavorites, addUser, localStorage, addCart, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate } = require("./repository");
+const { getMobile, userMatch, addFavorites, addUser, localStorage, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate } = require("./repository");
 const { SENDMAIL } = require("./email");
+const bodyParser = require('body-parser');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+
+
+app.post('/some-route', (req, res) => {
+  const requestBody = req.body;
+  res.json(requestBody);
+});
 
 
 app.post('/Emailorderconfirmation', (req, res) => {
   try {
-    const { firstname, lastname, email} = req.body.user[0];
-    const orderedPhoneDetails = req.body.orders; 
-    const { phone, City, Street, Housenumber, Apartmentnumber} = req.body.DeliveryDetails;
+    const { firstname, lastname, email } = req.body.user[0];
+    const orderedPhoneDetails = req.body.orders;
+    const { phone, City, Street, Housenumber, Apartmentnumber } = req.body.DeliveryDetails;
 
     SENDMAIL(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
     res.status(200).json({ message: 'Email sent successfully' });
@@ -246,6 +260,40 @@ router.get('/cartUpdate', async (req, res) => {
   }
 
 })
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+const upload = multer({ storage });
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+app.post('/upload', upload.single('image'), (req, res) => {
+  const imagePath = req.file.path;
+  const price = req.body.price; 
+  const name = req.body.name;
+  const category = req.body.category;
+
+  fs.readFile(imagePath, (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    const base64Image = data.toString('base64');
+    const datas = `data:image/jpeg;base64,${base64Image}`;
+    addProduct(datas, name, price, category);
+    res.json({ base64Image });
+  });
+});
+
+
 
 
 
