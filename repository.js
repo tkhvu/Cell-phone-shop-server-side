@@ -6,10 +6,19 @@ const ObjectID = require('mongodb').ObjectId;
 
 
 module.exports = {
-    getMobile: async () => {
 
-        const result = await client.db('mobile').collection('phones').find().toArray();
+    getCategory: async () => {
+        const result = await client.db('mobile').collection('category').find().toArray();
+
         return result;
+    },
+
+    getMobile: async () => {
+        const resultPhones = await client.db('mobile').collection('phones').find().toArray();
+        const resultAccessories = await client.db('mobile').collection('accessories').find().toArray();
+        const resultBatteries = await client.db('mobile').collection('batteries').find().toArray();
+
+        return resultPhones.concat(resultAccessories, resultBatteries);
     },
 
 
@@ -33,7 +42,7 @@ module.exports = {
     addCart: async (_id, id) => {
 
         const cartExists = await client.db("mobile").collection("Cartmobile").findOne({ _id: _id, "cart._id": new ObjectID(id) });
-       
+
         if (cartExists) {
             await client.db("mobile").collection("Cartmobile").updateOne(
                 { _id: _id, "cart._id": new ObjectID(id) },
@@ -102,7 +111,7 @@ module.exports = {
     },
 
     getCart: async (_id) => {
-    return await client.db("mobile").collection("Cartmobile").findOne({ _id });
+        return await client.db("mobile").collection("Cartmobile").findOne({ _id });
     },
 
     deleteFromcart: async (_id, id) => {
@@ -143,21 +152,28 @@ module.exports = {
     cartUpdate: async (_id, id, count) => {
         await client.db("mobile").collection("Cartmobile").updateOne(
             { _id: new ObjectID(_id), "cart._id": new ObjectID(id) },
-            { 
-                $set: { "cart.$.count": count } 
-              }
+            {
+                $set: { "cart.$.count": count }
+            }
         );
     },
-    
 
-    addProduct: async (selectedFileBase64, name, price, category) => {
-        const result = await client.db("mobile").collection(`${category}`).insertOne({
-          image: selectedFileBase64,
-          name: name,
-          price: price,
-          category: new ObjectID("64e711e3bc535c0b1cb7c2d8")
+
+    addProduct: async (selectedFileBase64, name, priceNumber, category) => {
+        const result = await client.db("mobile").collection("phones").insertOne({
+            src: selectedFileBase64,
+            name: name,
+            price: priceNumber,
+            category: new ObjectID(category)
         });
         return result;
-      }
+    },
+
+    addCategory: async ( category) => {
+
+        const result = await client.db("mobile").collection("category").insertOne({ category:  category });
+
+        return result;
+    },
 
 }

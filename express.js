@@ -1,30 +1,51 @@
 const express = require('express');
 const app = express()
 const router = express.Router();
-const { MongoClient } = require('mongodb');
 const ObjectID = require('mongodb').ObjectId;
-const client = new MongoClient("mongodb+srv://tkhvu3552:a303095483@cluster0.92quexa.mongodb.net/");
 const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, userMatch, addFavorites, addUser, localStorage, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate } = require("./repository");
+const { getMobile, userMatch, addFavorites, addUser, addCategory, localStorage, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-
-
-app.post('/some-route', (req, res) => {
-  const requestBody = req.body;
-  res.json(requestBody);
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
 });
+const upload = multer({ storage });
 
+// const { MongoClient } = require('mongodb');
+// const client = new MongoClient("mongodb+srv://tkhvu3552:a303095483@cluster0.92quexa.mongodb.net/");
+// app.post('/some-route', (req, res) => {
+//   const requestBody = req.body;
+//   res.json(requestBody);
+// });
+
+
+router.get('/getCategory', async (req, res) => {
+  try {
+    const category = await getCategory();
+    if (category) {
+      res.status(200).json(category);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
 
 app.post('/Emailorderconfirmation', (req, res) => {
   try {
@@ -81,6 +102,7 @@ router.get('/getCart', async (req, res) => {
 router.get('/getMobile', async (req, res) => {
   try {
     const mobiles = await getMobile();
+    // console.log(mobiles)
     if (mobiles) {
       res.status(200).json(mobiles);
     } else {
@@ -261,37 +283,65 @@ router.get('/cartUpdate', async (req, res) => {
 
 })
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+
+
+
+
+app.post('/upload', upload.single('image'), async (req, res) => {
+
+  try {
+    const imagePath = req.file.path;
+    const price = req.body.price;
+    const name = req.body.name;
+    const category = req.body.category;
+
+    const priceNumber = parseInt(price);
+
+
+    const imageData = await new Promise((resolve, reject) => {
+      fs.readFile(imagePath, (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      });
+    });
+
+    const base64Image = imageData.toString('base64');
+    const formattedImage = `data:image/jpeg;base64,${base64Image}`;
+    
+    await addProduct(formattedImage, name, priceNumber, category);
+
+    fs.unlink(imagePath, err => {
+      if (err) {
+        console.error(err);
+      }
+    });
+
+    res.json({ message: 'Product added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
-const upload = multer({ storage });
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.post('/addCategory', async (req, res) => {
+  try {
+    const {category } = req.body;
 
-
-app.post('/upload', upload.single('image'), (req, res) => {
-  const imagePath = req.file.path;
-  const price = req.body.price; 
-  const name = req.body.name;
-  const category = req.body.category;
-
-  fs.readFile(imagePath, (err, data) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Internal server error' });
+    const result = await addCategory( category);
+    console.log(result)
+    if (result) {
+      res.status(200).json(result);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
     }
-
-    const base64Image = data.toString('base64');
-    const datas = `data:image/jpeg;base64,${base64Image}`;
-    addProduct(datas, name, price, category);
-    res.json({ base64Image });
-  });
-});
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
 
 
 
