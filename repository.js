@@ -13,12 +13,24 @@ module.exports = {
         return result;
     },
 
+
+    deleteCategory: async (_id) => {
+        const result = await client.db('mobile').collection('category').deleteOne( { "_id" :new ObjectID(_id) });
+
+        return result;
+    },
+   
+    deleteProduct: async (_id) => {
+        const result = await client.db('mobile').collection('phones').deleteOne( { "_id" :new ObjectID(_id) });
+
+        return result;
+    },
+
     getMobile: async () => {
         const resultPhones = await client.db('mobile').collection('phones').find().toArray();
-        const resultAccessories = await client.db('mobile').collection('accessories').find().toArray();
-        const resultBatteries = await client.db('mobile').collection('batteries').find().toArray();
+        const resultAccessories = await client.db('mobile').collection('products').find().toArray();
 
-        return resultPhones.concat(resultAccessories, resultBatteries);
+        return resultPhones.concat(resultAccessories);
     },
 
 
@@ -41,7 +53,7 @@ module.exports = {
 
     addCart: async (_id, id) => {
 
-        const cartExists = await client.db("mobile").collection("Cartmobile").findOne({ _id: _id, "cart._id": new ObjectID(id) });
+        const cartExists = await client.db("mobile").collection("Cartmobile").findOne({  _id, "cart._id": new ObjectID(id) });
 
         if (cartExists) {
             await client.db("mobile").collection("Cartmobile").updateOne(

@@ -6,7 +6,7 @@ const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, userMatch, addFavorites, addUser, addCategory, localStorage, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate } = require("./repository");
+const { getMobile, userMatch, addFavorites, addUser, addCategory, localStorage, deleteProduct, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -36,6 +36,38 @@ const upload = multer({ storage });
 router.get('/getCategory', async (req, res) => {
   try {
     const category = await getCategory();
+    if (category) {
+      res.status(200).json(category);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
+
+router.get('/deleteCategory', async (req, res) => {
+  try {
+    let _id = req.query._id;
+    const category = await deleteCategory(_id);
+    if (category) {
+      res.status(200).json(category);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
+
+router.get('/deleteProduct', async (req, res) => {
+  try {
+    let _id = req.query._id;
+    const category = await deleteProduct(_id);
     if (category) {
       res.status(200).json(category);
     } else {
