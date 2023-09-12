@@ -19,6 +19,13 @@ module.exports = {
 
         return result;
     },
+
+    categoryUpdate: async (_id, category) => {
+        const result = await client.db('mobile').collection('category').updateOne( { "_id" :new ObjectID(_id) }, 
+        { $inc: { category: category } });
+
+        return result;
+    },
    
     deleteProduct: async (_id) => {
         const result = await client.db('mobile').collection('phones').deleteOne( { "_id" :new ObjectID(_id) });
@@ -31,6 +38,12 @@ module.exports = {
         const resultAccessories = await client.db('mobile').collection('products').find().toArray();
 
         return resultPhones.concat(resultAccessories);
+    },
+
+    getUsers: async () => {
+        const result = await client.db('mobile').collection('users').find().toArray();
+
+        return result;
     },
 
 

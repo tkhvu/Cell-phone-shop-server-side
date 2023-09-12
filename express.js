@@ -6,7 +6,7 @@ const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, userMatch, addFavorites, addUser, addCategory, localStorage, deleteProduct, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
+const { getMobile, userMatch, addFavorites, addUser, getUsers, addCategory, localStorage, deleteProduct, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -134,9 +134,23 @@ router.get('/getCart', async (req, res) => {
 router.get('/getMobile', async (req, res) => {
   try {
     const mobiles = await getMobile();
-    // console.log(mobiles)
     if (mobiles) {
       res.status(200).json(mobiles);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
+router.get('/getUsers', async (req, res) => {
+  try {
+    const users = await getUsers();
+    // console.log(mobiles)
+    if (users) {
+      res.status(200).json(users);
     } else {
       res.status(404).json({ error: 'No listings found' });
     }
