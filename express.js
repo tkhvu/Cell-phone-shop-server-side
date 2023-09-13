@@ -6,7 +6,7 @@ const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, userMatch, addFavorites, addUser, getUsers, addCategory, localStorage, deleteProduct, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
+const { getMobile, userMatch, addFavorites, addUser, getUsers, addCategory, categoryUpdate, localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -64,12 +64,49 @@ router.get('/deleteCategory', async (req, res) => {
 })
 
 
+router.get('/categoryUpdate', async (req, res) => {
+  try {
+    let _id = req.query._id;
+    let category = req.query.category;
+
+    const Update = await categoryUpdate(_id, category);
+    if (Update) {
+      res.status(200).json(Update);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
 router.get('/deleteProduct', async (req, res) => {
   try {
     let _id = req.query._id;
     const category = await deleteProduct(_id);
     if (category) {
       res.status(200).json(category);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
+router.get('/ProductUpdate', async (req, res) => {
+  try {
+    let _id = req.query._id;
+    let name = req.query.name;
+    let price = req.query.price;
+    
+    const priceNumber = parseInt(price);
+
+    const Update = await ProductUpdate(_id, name, priceNumber);
+    if (Update) {
+      res.status(200).json(Update);
     } else {
       res.status(404).json({ error: 'No listings found' });
     }
@@ -148,7 +185,6 @@ router.get('/getMobile', async (req, res) => {
 router.get('/getUsers', async (req, res) => {
   try {
     const users = await getUsers();
-    // console.log(mobiles)
     if (users) {
       res.status(200).json(users);
     } else {
@@ -181,7 +217,6 @@ app.post('/CreatingUser', async (req, res) => {
   try {
     const { firstname, lastname, email, username, password } = req.body;
     const result = await addUser(firstname, lastname, email, username, password);
-    console.log(result)
     if (result) {
       res.status(200).json(result);
     } else {
@@ -307,7 +342,6 @@ router.get('/cartUpdate', async (req, res) => {
       const { cartIndex } = result[0];
       if (count > 1) {
         await cartUpdate(_id, id, count)
-        console.log("if===", count)
       } else {
         if (cartIndex >= 0) {
           console.log(count)

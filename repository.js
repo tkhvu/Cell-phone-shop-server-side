@@ -22,8 +22,13 @@ module.exports = {
 
     categoryUpdate: async (_id, category) => {
         const result = await client.db('mobile').collection('category').updateOne( { "_id" :new ObjectID(_id) }, 
-        { $inc: { category: category } });
+        { $set: { category: category } });
+        return result;
+    },
 
+    ProductUpdate: async (_id, name, priceNumber) => {
+        const result = await client.db('mobile').collection('phones').updateOne( { "_id" :new ObjectID(_id) }, 
+        { $set: { name: name, price: priceNumber } });
         return result;
     },
    
