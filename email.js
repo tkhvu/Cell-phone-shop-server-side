@@ -9,16 +9,16 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const mailOptions = [
-    {
-        to: 'tkhvu3552@gmail.com', 
-        subject: 'הזמנה חדשה - כותרת ראשונה', 
-    },
-    {
-        to: 'perly.kar@gmail.com', 
-        subject: 'הזמנה חדשה - נוספה במערכת ', 
-    },
-];
+// const mailOptions = [
+//     {
+//         to: 'tkhvu3552@gmail.com', 
+//         subject: 'הזמנה חדשה - כותרת ראשונה', 
+//     },
+//     {
+//         to: 'perly.kar@gmail.com', 
+//         subject: 'הזמנה חדשה - נוספה במערכת ', 
+//     },
+// ];
 
 
 function calculateTotalCost(orderedPhoneDetails) {
@@ -31,6 +31,7 @@ function calculateTotalCost(orderedPhoneDetails) {
 
 
 const SENDMAIL = (firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber) => {
+
     const mailOptions = [
         {
             to: 'tkhvu3552@gmail.com', 
@@ -52,21 +53,19 @@ const SENDMAIL = (firstname, lastname, email, orderedPhoneDetails, phone, City, 
             <h2>פרטי ההזמנה</h2>
             <table style="border-collapse: collapse; width: 30%;">
             <tr>
-                <th style="border: 1px solid black; padding: 8px;">Image</th>
                 <th style="border: 1px solid black; padding: 8px;">מוצר</th>
                 <th style="border: 1px solid black; padding: 8px;">כמות</th>
                 <th style="border: 1px solid black; padding: 8px;">מחיר</th>
             </tr>
             ${orderedPhoneDetails.map(phone => `
             <tr>
-                <td style="border: 1px solid black; padding: 8px;"><img src="${phone.src}" alt="Phone Image" width="100" height="100"></td>
                 <td style="border: 1px solid black; padding: 8px;">${phone.name}</td>
                 <td style="border: 1px solid black; padding: 8px;">${phone.count}</td>
                 <td style="border: 1px solid black; padding: 8px;">${phone.price}</td>
             </tr>
             `).join('')}
             <tr>
-            <td colspan="3" style="text-align: right; border: 1px solid black; padding: 8px;"><strong>סך הכול:</strong></td>
+            <td colspan="2" style="text-align: right; border: 1px solid black; padding: 8px;"><strong>סך הכול:</strong></td>
             <td style="border: 1px solid black; padding: 8px;"><strong>${calculateTotalCost(orderedPhoneDetails)}</strong></td>
             </tr>
         </table>
@@ -107,10 +106,9 @@ const SENDMAIL = (firstname, lastname, email, orderedPhoneDetails, phone, City, 
                 <td style="border: 1px solid black; padding: 8px;">${Apartmentnumber}</td>
                 </tr>
             </table>
-            
-
-           
+        
             `
+
         }, (error, info) => {
             if (error) {
                 console.log('Error:', error);
@@ -123,3 +121,5 @@ const SENDMAIL = (firstname, lastname, email, orderedPhoneDetails, phone, City, 
 module.exports = {
     SENDMAIL: SENDMAIL
 };
+
+

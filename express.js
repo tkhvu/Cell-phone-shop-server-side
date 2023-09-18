@@ -6,7 +6,7 @@ const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, userMatch, addFavorites, addUser, getUsers, addCategory, categoryUpdate, localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
+const { getMobile, userMatch, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -64,11 +64,26 @@ router.get('/deleteCategory', async (req, res) => {
 })
 
 
+router.get('/emptyCart', async (req, res) => {
+  try {
+    let _id = req.query._id;
+    const cart = await emptyCart(_id);
+    if (cart) {
+      res.status(200).json(cart);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
+
 router.get('/categoryUpdate', async (req, res) => {
   try {
     let _id = req.query._id;
     let category = req.query.category;
-
     const Update = await categoryUpdate(_id, category);
     if (Update) {
       res.status(200).json(Update);
@@ -389,7 +404,8 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     });
 
     const base64Image = imageData.toString('base64');
-    const formattedImage = `data:image/jpeg;base64,${base64Image}`;
+    
+    const formattedImage = `data:image/png;base64,${base64Image}`;
     
     await addProduct(formattedImage, name, priceNumber, category);
 

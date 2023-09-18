@@ -15,25 +15,32 @@ module.exports = {
 
 
     deleteCategory: async (_id) => {
-        const result = await client.db('mobile').collection('category').deleteOne( { "_id" :new ObjectID(_id) });
+        const result = await client.db('mobile').collection('category').deleteOne({ "_id": new ObjectID(_id) });
 
         return result;
     },
 
     categoryUpdate: async (_id, category) => {
-        const result = await client.db('mobile').collection('category').updateOne( { "_id" :new ObjectID(_id) }, 
-        { $set: { category: category } });
-        return result;
+        if (_id.length < 11) {
+            const result = await client.db('mobile').collection('category').insertOne({ category: category })
+            return result;
+
+        } else {
+            const result = await client.db('mobile').collection('category').updateOne({ "_id": new ObjectID(_id) },
+                { $set: { category: category } });
+            return result;
+
+        }
     },
 
     ProductUpdate: async (_id, name, priceNumber) => {
-        const result = await client.db('mobile').collection('phones').updateOne( { "_id" :new ObjectID(_id) }, 
-        { $set: { name: name, price: priceNumber } });
+        const result = await client.db('mobile').collection('phones').updateOne({ "_id": new ObjectID(_id) },
+            { $set: { name: name, price: priceNumber } });
         return result;
     },
-   
+
     deleteProduct: async (_id) => {
-        const result = await client.db('mobile').collection('phones').deleteOne( { "_id" :new ObjectID(_id) });
+        const result = await client.db('mobile').collection('phones').deleteOne({ "_id": new ObjectID(_id) });
 
         return result;
     },
@@ -71,7 +78,7 @@ module.exports = {
 
     addCart: async (_id, id) => {
 
-        const cartExists = await client.db("mobile").collection("Cartmobile").findOne({  _id, "cart._id": new ObjectID(id) });
+        const cartExists = await client.db("mobile").collection("Cartmobile").findOne({ _id, "cart._id": new ObjectID(id) });
 
         if (cartExists) {
             await client.db("mobile").collection("Cartmobile").updateOne(
@@ -87,6 +94,13 @@ module.exports = {
     },
 
 
+    emptyCart: async (_id) => {
+
+        const result = await client.db("mobile").collection("Cartmobile").updateOne({ "_id": new ObjectID(_id) },
+            { $set: { cart: []} })
+        return result;
+
+    },
 
 
     addUser: async (firstname, lastname, email, username, password) => {
@@ -199,9 +213,9 @@ module.exports = {
         return result;
     },
 
-    addCategory: async ( category) => {
+    addCategory: async (category) => {
 
-        const result = await client.db("mobile").collection("category").insertOne({ category:  category });
+        const result = await client.db("mobile").collection("category").insertOne({ category: category });
 
         return result;
     },
