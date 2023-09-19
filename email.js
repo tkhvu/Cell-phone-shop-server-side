@@ -9,16 +9,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// const mailOptions = [
-//     {
-//         to: 'tkhvu3552@gmail.com', 
-//         subject: 'הזמנה חדשה - כותרת ראשונה', 
-//     },
-//     {
-//         to: 'perly.kar@gmail.com', 
-//         subject: 'הזמנה חדשה - נוספה במערכת ', 
-//     },
-// ];
+
 
 
 function calculateTotalCost(orderedPhoneDetails) {
@@ -35,11 +26,11 @@ const SENDMAIL = (firstname, lastname, email, orderedPhoneDetails, phone, City, 
     const mailOptions = [
         {
             to: 'tkhvu3552@gmail.com', 
-            subject: 'הזמנה חדשה - כותרת ראשונה', 
+            subject: 'הזמנה חדשה נוספה', 
         },
         {
             to: email, 
-            subject: 'הזמנה חדשה - נוספה במערכת ', 
+            subject: 'פרטי ההזמנה ', 
         },
     ];
     
@@ -82,7 +73,7 @@ const SENDMAIL = (firstname, lastname, email, orderedPhoneDetails, phone, City, 
                     <td style="border: 1px solid black; padding: 8px;">${lastname}</td>
                 </tr>
                 <tr>
-                <td style="border: 1px solid black; padding: 8px;">Email</td>
+                <td style="border: 1px solid black; padding: 8px;">אימייל</td>
                 <td style="border: 1px solid black; padding: 8px;">${email}</td>
                 </tr>
                 <tr>
