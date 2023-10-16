@@ -136,6 +136,7 @@ app.post('/Emailorderconfirmation', (req, res) => {
     const { firstname, lastname, email } = req.body.user[0];
     const orderedPhoneDetails = req.body.orders;
     const { phone, City, Street, Housenumber, Apartmentnumber } = req.body.DeliveryDetails;
+    console.log(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber)
     SENDMAIL(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
     res.status(200).json( 'Email sent successfully');
   } catch (e) {
