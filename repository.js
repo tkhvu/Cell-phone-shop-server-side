@@ -68,6 +68,14 @@ module.exports = {
     },
 
 
+    UsernameCheck: async (username) => {
+
+        return await client.db("mobile").collection("users").find({
+            username: username,
+        }).toArray();
+    },
+
+
     addFavorites: async (_id, id) => {
 
         await client.db("mobile").collection("users")

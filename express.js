@@ -6,7 +6,7 @@ const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, userMatch, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
+const { getMobile, userMatch, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, UsernameCheck, localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -136,7 +136,6 @@ app.post('/Emailorderconfirmation', (req, res) => {
     const { firstname, lastname, email } = req.body.user[0];
     const orderedPhoneDetails = req.body.orders;
     const { phone, City, Street, Housenumber, Apartmentnumber } = req.body.DeliveryDetails;
-    console.log(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber)
     SENDMAIL(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
     res.status(200).json( 'Email sent successfully');
   } catch (e) {
@@ -252,6 +251,7 @@ router.get('/userMatch', async (req, res) => {
 
     const user = await userMatch(username, password);
     if (user) {
+      console.log(user)
       res.status(200).json(user);
     } else {
       res.status(404).json({ error: 'No listings found' });
@@ -262,6 +262,25 @@ router.get('/userMatch', async (req, res) => {
   }
 })
 
+
+router.get('/UsernameCheck', async (req, res) => {
+  try {
+    let username = req.query.username;
+
+    const user = await UsernameCheck(username);
+    
+    if (user.length === 0) {
+      console.log(true)
+      res.status(200).json({ available: true });
+    } else {
+      console.log(false)
+      res.status(200).json({ available: false });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 router.get('/addFavorites', async (req, res) => {
 
