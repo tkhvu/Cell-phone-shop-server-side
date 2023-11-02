@@ -6,7 +6,7 @@ const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, userMatch, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, UsernameCheck, localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
+const { getMobile, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, UsernameCheck, localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -14,6 +14,8 @@ const path = require('path');
 const fs = require('fs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+const bcrypt = require('bcrypt');
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -230,7 +232,8 @@ app.post('/CreatingUser', async (req, res) => {
 
   try {
     const { firstname, lastname, email, username, password } = req.body;
-    const result = await addUser(firstname, lastname, email, username, password);
+     const hashedPwd = await bcrypt.hash(password, 10);
+    const result = await addUser(firstname, lastname, email, username, hashedPwd);
     if (result) {
       res.status(200).json(result);
     } else {
@@ -248,10 +251,10 @@ router.get('/userMatch', async (req, res) => {
   try {
     let username = req.query.username;
     let password = req.query.password;
+    const user = await UsernameCheck(username);
+    const match = bcrypt.compare(password, user[0].password);
 
-    const user = await userMatch(username, password);
-    if (user) {
-      console.log(user)
+    if (match) {
       res.status(200).json(user);
     } else {
       res.status(404).json({ error: 'No listings found' });

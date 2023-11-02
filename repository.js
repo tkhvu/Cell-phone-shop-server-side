@@ -59,13 +59,12 @@ module.exports = {
     },
 
 
-    userMatch: async (username, password) => {
+    // userMatch: async (username) => {
 
-        return await client.db("mobile").collection("users").find({
-            username: username,
-            password: password
-        }).toArray();
-    },
+    //     return await client.db("mobile").collection("users").find({
+    //         username: username,
+    //     }).toArray();
+    // },
 
 
     UsernameCheck: async (username) => {
@@ -111,8 +110,9 @@ module.exports = {
     },
 
 
-    addUser: async (firstname, lastname, email, username, password) => {
-
+    addUser: async (firstname, lastname, email, username, hashedPwd) => {
+        const password = hashedPwd
+console.log(password)
         await client.db("mobile").collection("Cartmobile").insertOne({ cart: [] });
         const cartId = await client.db("mobile").collection("Cartmobile").find().sort({ _id: -1 }).limit(1).toArray();
 
