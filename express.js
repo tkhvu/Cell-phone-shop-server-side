@@ -252,8 +252,7 @@ router.get('/userMatch', async (req, res) => {
     let username = req.query.username;
     let password = req.query.password;
     const user = await UsernameCheck(username);
-    const match = bcrypt.compare(password, user[0].password);
-
+    const match = bcrypt.compareSync(password, user[0].password);
     if (match) {
       res.status(200).json(user);
     } else {
