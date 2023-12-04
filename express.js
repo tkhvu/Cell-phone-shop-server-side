@@ -6,16 +6,20 @@ const cors = require('cors');
 app.use(cors());
 app.use('/', router);
 app.use(express.json());
-const { getMobile, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, UsernameCheck, localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory } = require("./repository");
+const { getMobile, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, UsernameCheck,
+  localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart,
+  MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory, TokenCheck } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
-const path = require('path');
 const fs = require('fs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 const bcrypt = require('bcrypt');
-
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+app.use(cookieParser())
+require('dotenv').config({ path: "./config.env" });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -27,12 +31,85 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// const { MongoClient } = require('mongodb');
-// const client = new MongoClient("mongodb+srv://tkhvu3552:a303095483@cluster0.92quexa.mongodb.net/");
-// app.post('/some-route', (req, res) => {
-//   const requestBody = req.body;
-//   res.json(requestBody);
-// });
+
+
+app.post('/userMatch1', async (req, res) => {
+
+  try {
+    const { username, password } = req.body;
+
+    const user = await UsernameCheck(username);
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const match = bcrypt.compareSync(password, user[0].password);
+
+    if (match) {
+      
+        const cookie = req.cookies["token"];
+        const cookie1 = await TokenCheck(match, cookie);
+  
+        delete user[0].password;
+        
+        if (!cookie1) {
+          const token = jwt.sign({ _id: user[0]._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  
+  
+          res.status(200).cookie("token", token, { httpOnly: true });
+          res.status(200).json(user);
+        }
+        else {
+          res.status(200).json(user);
+        }
+      } else {
+        const user = []
+        res.status(200).json(user);
+      }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.get('/userMatch', async (req, res) => {
+
+  
+  try {
+    const { username, password } = req.query;
+
+    const user = await UsernameCheck(username);
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const match = bcrypt.compareSync(password, user[0].password);
+
+    if (match) {
+      
+        const cookie = req.cookies["token"];
+        const tokenCheckResult  = await TokenCheck(match, cookie);
+        delete user[0].password;
+        
+        if (!tokenCheckResult ) {
+          const token = jwt.sign({ _id: user[0]._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+          res.status(200).cookie("token", token, { httpOnly: true });
+          res.status(200).json(user);
+        }
+        else {
+          res.status(200).json(user);
+        }
+      } else {
+        const user = []
+        res.status(200).json(user);
+      }
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message })
+  }
+})
+
 
 
 router.get('/getCategory', async (req, res) => {
@@ -118,7 +195,7 @@ router.get('/ProductUpdate', async (req, res) => {
     let _id = req.query._id;
     let name = req.query.name;
     let price = req.query.price;
-    
+
     const priceNumber = parseInt(price);
 
     const Update = await ProductUpdate(_id, name, priceNumber);
@@ -139,7 +216,7 @@ app.post('/Emailorderconfirmation', (req, res) => {
     const orderedPhoneDetails = req.body.orders;
     const { phone, City, Street, Housenumber, Apartmentnumber } = req.body.DeliveryDetails;
     SENDMAIL(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
-    res.status(200).json( 'Email sent successfully');
+    res.status(200).json('Email sent successfully');
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message });
@@ -232,7 +309,7 @@ app.post('/CreatingUser', async (req, res) => {
 
   try {
     const { firstname, lastname, email, username, password } = req.body;
-     const hashedPwd = await bcrypt.hash(password, 10);
+    const hashedPwd = await bcrypt.hash(password, 10);
     const result = await addUser(firstname, lastname, email, username, hashedPwd);
     if (result) {
       res.status(200).json(result);
@@ -246,23 +323,30 @@ app.post('/CreatingUser', async (req, res) => {
 })
 
 
-router.get('/userMatch', async (req, res) => {
+// router.get('/userMatch', async (req, res) => {
 
-  try {
-    let username = req.query.username;
-    let password = req.query.password;
-    const user = await UsernameCheck(username);
-    const match = bcrypt.compareSync(password, user[0].password);
-    if (match) {
-      res.status(200).json(user);
-    } else {
-      res.status(404).json({ error: 'No listings found' });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
-})
+//   try {
+//     let username = req.query.username;
+//     let password = req.query.password;
+//     const user = await UsernameCheck(username);
+
+//     if (user.length === 0) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+
+//     const match = bcrypt.compareSync(password, user[0].password);
+//     if (match) {
+//       res.status(200).json(user);
+//     }
+//     else {
+//       const user = []
+//       res.status(200).json(user);
+//     }
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).json({ error: e.message })
+//   }
+// })
 
 
 router.get('/UsernameCheck', async (req, res) => {
@@ -270,12 +354,10 @@ router.get('/UsernameCheck', async (req, res) => {
     let username = req.query.username;
 
     const user = await UsernameCheck(username);
-    
+
     if (user.length === 0) {
-      console.log(true)
       res.status(200).json({ available: true });
     } else {
-      console.log(false)
       res.status(200).json({ available: false });
     }
   } catch (e) {
@@ -425,9 +507,9 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     });
 
     const base64Image = imageData.toString('base64');
-    
+
     const formattedImage = `data:image/png;base64,${base64Image}`;
-    
+
     await addProduct(formattedImage, name, priceNumber, category);
 
     fs.unlink(imagePath, err => {
@@ -445,9 +527,9 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
 app.post('/addCategory', async (req, res) => {
   try {
-    const {category } = req.body;
+    const { category } = req.body;
 
-    const result = await addCategory( category);
+    const result = await addCategory(category);
     console.log(result)
     if (result) {
       res.status(200).json(result);

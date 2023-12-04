@@ -1,11 +1,13 @@
 const { MongoClient } = require('mongodb');
-const client = new MongoClient("mongodb+srv://tkhvu3552:a303095483@cluster0.92quexa.mongodb.net/");
+const client = new MongoClient("mongodb+srv://tkhvu3552:a303095483@cluster0.92quexa.mongodb.net/mongodb+srv://tkhvu3552:a303095483@cluster0.92quexa.mongodb.net/");
 const ObjectID = require('mongodb').ObjectId;
+const jwt = require('jsonwebtoken');
 
 
 
 
 module.exports = {
+
 
     getCategory: async () => {
         const result = await client.db('mobile').collection('category').find().toArray();
@@ -226,6 +228,17 @@ console.log(password)
         const result = await client.db("mobile").collection("category").insertOne({ category: category });
 
         return result;
+    },
+
+    
+    TokenCheck: async (cookie) => {
+        try {
+            const result = await jwt.verify(cookie, process.env.JWT_SECRET);
+            return result;
+
+        } catch (e) {
+            return false;
+        }
     },
 
 }
