@@ -3,12 +3,15 @@ const app = express()
 const router = express.Router();
 const ObjectID = require('mongodb').ObjectId;
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+  credentials: true,
+  origin: ['http://localhost:4200', "http://localhost:65443", "https://api-pi72mex7aq-uc.a.run.app", "https://ringtones-79130.firebaseapp.com"]
+}))
 app.use('/', router);
 app.use(express.json());
 const { getMobile, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, UsernameCheck,
-  localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart,
-  MobileDetails, deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory, TokenCheck } = require("./repository");
+  localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails,
+  deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory, TokenCheck } = require("./repository");
 const { SENDMAIL } = require("./email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -21,6 +24,8 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser())
 require('dotenv').config({ path: "./config.env" });
 
+
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads');
@@ -31,14 +36,21 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-
-
-app.post('/userMatch1', async (req, res) => {
+app.post('/userMatch', async (req, res) => {
 
   try {
     const { username, password } = req.body;
+    const cookie = req.cookies["token"];
+    const usernameDirector = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
 
     const user = await UsernameCheck(username);
+    const matchUsername = bcrypt.compareSync(user[0].username, usernameDirector);
+
+
+    const userWithDirector = {
+      ...user,
+      Director: matchUsername
+    };
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -46,71 +58,48 @@ app.post('/userMatch1', async (req, res) => {
     const match = bcrypt.compareSync(password, user[0].password);
 
     if (match) {
-      
-        const cookie = req.cookies["token"];
-        const cookie1 = await TokenCheck(match, cookie);
-  
-        delete user[0].password;
-        
-        if (!cookie1) {
-          const token = jwt.sign({ _id: user[0]._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-  
-  
-          res.status(200).cookie("token", token, { httpOnly: true });
-          res.status(200).json(user);
-        }
-        else {
-          res.status(200).json(user);
-        }
-      } else {
-        const user = []
-        res.status(200).json(user);
+
+      const cookieValid = TokenCheck(cookie);
+      // delete user[0].password;
+      if (!cookieValid) {
+        const token = jwt.sign({ _id: user[0]._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+
+        res.status(200).cookie("token", token, { httpOnly: true, sameSite: 'None', secure: true });
+        res.status(200).cookie("_id", user[0]._id, { httpOnly: true, sameSite: 'None', secure: true });
+        res.status(200).json(userWithDirector);
       }
+      else {
+        res.status(200).cookie("_id", user[0]._id, { httpOnly: true, sameSite: 'None', secure: true });
+        res.status(200).json(userWithDirector);
+      }
+    } else {
+      const user = []
+      res.status(200).json(user);
+    }
   } catch (e) {
+
     console.error(e);
     res.status(500).json({ error: e.message })
   }
 })
 
-app.get('/userMatch', async (req, res) => {
 
-  
+app.get('/getMobile', async (req, res) => {
   try {
-    const { username, password } = req.query;
-
-    const user = await UsernameCheck(username);
-    if (user.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+    // const cookie = req.cookies["_id"];
+    // console.log(cookie)
+    const mobiles = await getMobile();
+    if (mobiles) {
+      res.status(200).json(mobiles);
+    } else {
+      res.status(404).json({ error: 'No listings found' });
     }
-
-    const match = bcrypt.compareSync(password, user[0].password);
-
-    if (match) {
-      
-        const cookie = req.cookies["token"];
-        const tokenCheckResult  = await TokenCheck(match, cookie);
-        delete user[0].password;
-        
-        if (!tokenCheckResult ) {
-          const token = jwt.sign({ _id: user[0]._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-          res.status(200).cookie("token", token, { httpOnly: true });
-          res.status(200).json(user);
-        }
-        else {
-          res.status(200).json(user);
-        }
-      } else {
-        const user = []
-        res.status(200).json(user);
-      }
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message })
   }
 })
-
-
 
 router.get('/getCategory', async (req, res) => {
   try {
@@ -212,6 +201,9 @@ router.get('/ProductUpdate', async (req, res) => {
 
 app.post('/Emailorderconfirmation', (req, res) => {
   try {
+    const cookie = req.cookies["token"];
+    jwt.verify(cookie, process.env.JWT_SECRET);
+
     const { firstname, lastname, email } = req.body.user[0];
     const orderedPhoneDetails = req.body.orders;
     const { phone, City, Street, Housenumber, Apartmentnumber } = req.body.DeliveryDetails;
@@ -260,23 +252,11 @@ router.get('/getCart', async (req, res) => {
 
 
 
-
-router.get('/getMobile', async (req, res) => {
+app.get('/getUsers', async (req, res) => {
   try {
-    const mobiles = await getMobile();
-    if (mobiles) {
-      res.status(200).json(mobiles);
-    } else {
-      res.status(404).json({ error: 'No listings found' });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
-})
-
-router.get('/getUsers', async (req, res) => {
-  try {
+    const cookie = req.cookies["token"];
+    // console.log( process.env.JWT_SECRET, "260")
+    jwt.verify(cookie, process.env.JWT_SECRET);
     const users = await getUsers();
     if (users) {
       res.status(200).json(users);
@@ -323,7 +303,7 @@ app.post('/CreatingUser', async (req, res) => {
 })
 
 
-// router.get('/userMatch', async (req, res) => {
+// app.get('/userMatch', async (req, res) => {
 
 //   try {
 //     let username = req.query.username;
@@ -356,8 +336,10 @@ router.get('/UsernameCheck', async (req, res) => {
     const user = await UsernameCheck(username);
 
     if (user.length === 0) {
+      // console.log(true)
       res.status(200).json({ available: true });
     } else {
+      // console.log(false)
       res.status(200).json({ available: false });
     }
   } catch (e) {
@@ -398,15 +380,28 @@ router.get('/deleteFavorites', async (req, res) => {
 
 })
 
-router.get('/localStorage', async (req, res) => {
+app.get('/localStorage', async (req, res) => {
 
   try {
-    let _id = req.query._id;
+    let _id = req.cookies["_id"];
     const user = await localStorage(new ObjectID(_id));
-    if (user) {
-      res.status(200).json(user);
-    } else {
+    const username = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
+
+    const match = bcrypt.compareSync(user.username, username);
+    // console.log("match==", match)
+
+    if (!user) {
       res.status(404).json({ error: 'No listings found' });
+    } else {
+      if (match) {
+        const userWithDirector = {
+          ...user,
+          Director: match
+        };
+        res.status(200).json(userWithDirector);
+      } else {
+        res.status(200).json(user);
+      }
     }
   } catch (e) {
     console.error(e);
@@ -462,7 +457,6 @@ router.get('/cartUpdate', async (req, res) => {
         await cartUpdate(_id, id, count)
       } else {
         if (cartIndex >= 0) {
-          console.log(count)
 
           await deleteObjectcart(_id, cartIndex)
 
@@ -530,7 +524,6 @@ app.post('/addCategory', async (req, res) => {
     const { category } = req.body;
 
     const result = await addCategory(category);
-    console.log(result)
     if (result) {
       res.status(200).json(result);
     } else {
@@ -544,7 +537,5 @@ app.post('/addCategory', async (req, res) => {
 
 
 
-
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT);

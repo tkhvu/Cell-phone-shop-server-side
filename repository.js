@@ -1,5 +1,6 @@
+require('dotenv').config({ path: "./config.env" });
 const { MongoClient } = require('mongodb');
-const client = new MongoClient("mongodb+srv://tkhvu3552:a303095483@cluster0.92quexa.mongodb.net/mongodb+srv://tkhvu3552:a303095483@cluster0.92quexa.mongodb.net/");
+const client = new MongoClient("mongodb+srv://" + process.env.USERNAME_PASSWORD + "@cluster0.92quexa.mongodb.net/");
 const ObjectID = require('mongodb').ObjectId;
 const jwt = require('jsonwebtoken');
 
@@ -7,7 +8,6 @@ const jwt = require('jsonwebtoken');
 
 
 module.exports = {
-
 
     getCategory: async () => {
         const result = await client.db('mobile').collection('category').find().toArray();
@@ -114,7 +114,6 @@ module.exports = {
 
     addUser: async (firstname, lastname, email, username, hashedPwd) => {
         const password = hashedPwd
-console.log(password)
         await client.db("mobile").collection("Cartmobile").insertOne({ cart: [] });
         const cartId = await client.db("mobile").collection("Cartmobile").find().sort({ _id: -1 }).limit(1).toArray();
 
@@ -139,7 +138,7 @@ console.log(password)
         if (user) {
             return user;
         } else {
-            return null; // Return null if the user is not found
+            return null; 
         }
     },
 
@@ -230,15 +229,14 @@ console.log(password)
         return result;
     },
 
-    
-    TokenCheck: async (cookie) => {
+    TokenCheck(cookie){
         try {
-            const result = await jwt.verify(cookie, process.env.JWT_SECRET);
+
+            const result = jwt.verify(cookie, process.env.JWT_SECRET);
             return result;
 
         } catch (e) {
             return false;
         }
     },
-
 }
