@@ -5,7 +5,7 @@ const ObjectID = require('mongodb').ObjectId;
 const cors = require('cors');
 app.use(cors({
   credentials: true,
-  origin: ['http://localhost:4200', "http://localhost:65443", "https://api-pi72mex7aq-uc.a.run.app", "https://ringtones-79130.firebaseapp.com"]
+  origin: ['http://localhost:4200', "http://localhost:54925", "https://api-pi72mex7aq-uc.a.run.app", "https://ringtones-79130.firebaseapp.com"]
 }))
 app.use('/', router);
 app.use(express.json());
@@ -44,34 +44,30 @@ app.post('/userMatch', async (req, res) => {
     const usernameDirector = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
 
     const user = await UsernameCheck(username);
-    const matchUsername = bcrypt.compareSync(user[0].username, usernameDirector);
 
+    if (user) {
+      const matchUsername = bcrypt.compareSync(username, usernameDirector);
+      const match = bcrypt.compareSync(password, user.password);
 
-    const userWithDirector = {
-      ...user,
-      Director: matchUsername
-    };
-    if (user.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const match = bcrypt.compareSync(password, user[0].password);
-
-    if (match) {
-
-      const cookieValid = TokenCheck(cookie);
-      // delete user[0].password;
-      if (!cookieValid) {
-        const token = jwt.sign({ _id: user[0]._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-
-        res.status(200).cookie("token", token, { httpOnly: true, sameSite: 'None', secure: true });
-        res.status(200).cookie("_id", user[0]._id, { httpOnly: true, sameSite: 'None', secure: true });
-        res.status(200).json(userWithDirector);
-      }
-      else {
-        res.status(200).cookie("_id", user[0]._id, { httpOnly: true, sameSite: 'None', secure: true });
-        res.status(200).json(userWithDirector);
+      const userWithDirector = {
+        ...user,
+        Director: matchUsername
+      };
+      if (match) {
+        const cookieValid = TokenCheck(cookie);
+        if (!cookieValid) {
+          const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+          res.status(200).cookie("token", token, { httpOnly: true, sameSite: 'None', secure: true });
+          res.status(200).cookie("_id", user._id, { httpOnly: true, sameSite: 'None', secure: true });
+          res.status(200).json(userWithDirector);
+        }
+        else {
+          res.status(200).cookie("_id", user._id, { httpOnly: true, sameSite: 'None', secure: true });
+          res.status(200).json(userWithDirector);
+        }
+      } else {
+        const user = []
+        res.status(200).json(user);
       }
     } else {
       const user = []
@@ -87,8 +83,6 @@ app.post('/userMatch', async (req, res) => {
 
 app.get('/getMobile', async (req, res) => {
   try {
-    // const cookie = req.cookies["_id"];
-    // console.log(cookie)
     const mobiles = await getMobile();
     if (mobiles) {
       res.status(200).json(mobiles);
@@ -204,7 +198,7 @@ app.post('/Emailorderconfirmation', (req, res) => {
     const cookie = req.cookies["token"];
     jwt.verify(cookie, process.env.JWT_SECRET);
 
-    const { firstname, lastname, email } = req.body.user[0];
+    const { firstname, lastname, email } = req.body.user;
     const orderedPhoneDetails = req.body.orders;
     const { phone, City, Street, Housenumber, Apartmentnumber } = req.body.DeliveryDetails;
     SENDMAIL(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
@@ -334,12 +328,9 @@ router.get('/UsernameCheck', async (req, res) => {
     let username = req.query.username;
 
     const user = await UsernameCheck(username);
-
-    if (user.length === 0) {
-      // console.log(true)
+    if (user) {
       res.status(200).json({ available: true });
     } else {
-      // console.log(false)
       res.status(200).json({ available: false });
     }
   } catch (e) {
@@ -418,6 +409,7 @@ router.get('/deleteFromcart', async (req, res) => {
 
   try {
     const result = await deleteFromcart(_id, id)
+
     if (result.length > 0) {
       const { cartIndex, itemCount } = result[0];
       if (itemCount > 1) {
@@ -451,9 +443,11 @@ router.get('/cartUpdate', async (req, res) => {
 
   try {
     const result = await deleteFromcart(_id, id)
+
     if (result.length > 0) {
       const { cartIndex } = result[0];
-      if (count > 1) {
+
+      if (count >= 1) {
         await cartUpdate(_id, id, count)
       } else {
         if (cartIndex >= 0) {
@@ -537,5 +531,5 @@ app.post('/addCategory', async (req, res) => {
 
 
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT);

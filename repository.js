@@ -61,19 +61,9 @@ module.exports = {
     },
 
 
-    // userMatch: async (username) => {
-
-    //     return await client.db("mobile").collection("users").find({
-    //         username: username,
-    //     }).toArray();
-    // },
-
-
     UsernameCheck: async (username) => {
+        return await client.db("mobile").collection("users").findOne({ username: username });
 
-        return await client.db("mobile").collection("users").find({
-            username: username,
-        }).toArray();
     },
 
 
@@ -106,7 +96,7 @@ module.exports = {
     emptyCart: async (_id) => {
 
         const result = await client.db("mobile").collection("Cartmobile").updateOne({ "_id": new ObjectID(_id) },
-            { $set: { cart: []} })
+            { $set: { cart: [] } })
         return result;
 
     },
@@ -116,9 +106,8 @@ module.exports = {
         const password = hashedPwd
         await client.db("mobile").collection("Cartmobile").insertOne({ cart: [] });
         const cartId = await client.db("mobile").collection("Cartmobile").find().sort({ _id: -1 }).limit(1).toArray();
-
         const result = await client.db("mobile").collection("users")
-            .insertOne({ firstname, lastname, email, username, password, favorites: [], cart: [cartId[0]._id] });
+            .insertOne({ firstname, lastname, email, username, password, favorites: [], cart: cartId[0]._id });
 
         return result;
     },
@@ -138,7 +127,7 @@ module.exports = {
         if (user) {
             return user;
         } else {
-            return null; 
+            return null;
         }
     },
 
@@ -229,7 +218,7 @@ module.exports = {
         return result;
     },
 
-    TokenCheck(cookie){
+    TokenCheck(cookie) {
         try {
 
             const result = jwt.verify(cookie, process.env.JWT_SECRET);
