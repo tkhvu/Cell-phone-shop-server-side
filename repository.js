@@ -3,59 +3,58 @@ const { MongoClient } = require('mongodb');
 const client = new MongoClient("mongodb+srv://" + process.env.USERNAME_PASSWORD + "@cluster0.92quexa.mongodb.net/");
 const ObjectID = require('mongodb').ObjectId;
 const jwt = require('jsonwebtoken');
-
-
-
+const { Cart, User, Phone, Category } = require('./userModel');
+const mongoose = require('mongoose');
+// mongoose.connect("mongodb+srv://" + process.env.USERNAME_PASSWORD + "@cluster0.92quexa.mongodb.net/mobile");
 
 module.exports = {
 
     getCategory: async () => {
-        const result = await client.db('mobile').collection('category').find().toArray();
+        const result = await client.db("mobile").collection('category').find().toArray();
 
         return result;
     },
 
 
     deleteCategory: async (_id) => {
-        const result = await client.db('mobile').collection('category').deleteOne({ "_id": new ObjectID(_id) });
+        const result = await client.db("mobile").collection('category').deleteOne({ "_id": new ObjectID(_id) });
 
         return result;
     },
 
     categoryUpdate: async (_id, category) => {
         if (_id.length < 11) {
-            const result = await client.db('mobile').collection('category').insertOne({ category: category })
+            const result = await client.db("mobile").collection('category').insertOne({ category: category })
             return result;
 
         } else {
-            const result = await client.db('mobile').collection('category').updateOne({ "_id": new ObjectID(_id) },
+            const result = await client.db("mobile").collection('category').updateOne({ "_id": new ObjectID(_id) },
                 { $set: { category: category } });
             return result;
-
         }
     },
 
     ProductUpdate: async (_id, name, priceNumber) => {
-        const result = await client.db('mobile').collection('phones').updateOne({ "_id": new ObjectID(_id) },
+        const result = await client.db("mobile").collection('phones').updateOne({ "_id": new ObjectID(_id) },
             { $set: { name: name, price: priceNumber } });
         return result;
     },
 
     deleteProduct: async (_id) => {
-        const result = await client.db('mobile').collection('phones').deleteOne({ "_id": new ObjectID(_id) });
+        const result = await client.db("mobile").collection('phones').deleteOne({ "_id": new ObjectID(_id) });
 
         return result;
     },
 
     getMobile: async () => {
-        const resultPhones = await client.db('mobile').collection('phones').find().toArray();
-        const resultAccessories = await client.db('mobile').collection('products').find().toArray();
+        const resultPhones = await client.db("mobile").collection('phones').find().toArray();
+        const resultAccessories = await client.db("mobile").collection('products').find().toArray();
 
         return resultPhones.concat(resultAccessories);
     },
 
     getUsers: async () => {
-        const result = await client.db('mobile').collection('users').find().toArray();
+        const result = await client.db("mobile").collection('users').find().toArray();
 
         return result;
     },
@@ -77,17 +76,18 @@ module.exports = {
 
     addCart: async (_id, id) => {
 
-        const cartExists = await client.db("mobile").collection("Cartmobile").findOne({ _id, "cart._id": new ObjectID(id) });
+        const cartExists = await Cart.findOne({ _id, "cart._id": new mongoose.Types.ObjectId(id) });
 
         if (cartExists) {
-            await client.db("mobile").collection("Cartmobile").updateOne(
-                { _id: _id, "cart._id": new ObjectID(id) },
+            await Cart.updateOne(
+                { _id: new mongoose.Types.ObjectId(_id), "cart._id": new mongoose.Types.ObjectId(id) },
                 { $inc: { "cart.$.count": 1 } }
             );
         } else {
-            await client.db("mobile").collection("Cartmobile").updateOne(
+            await Cart.updateOne(
+              
                 { _id: _id },
-                { $push: { cart: { _id: new ObjectID(id), count: 1 } } }
+                { $push: { cart: { _id: new mongoose.Types.ObjectId(id), count: 1 } } }
             );
         }
     },
@@ -95,7 +95,7 @@ module.exports = {
 
     emptyCart: async (_id) => {
 
-        const result = await client.db("mobile").collection("Cartmobile").updateOne({ "_id": new ObjectID(_id) },
+        const result = await Cart.updateOne({ "_id": new ObjectID(_id) },
             { $set: { cart: [] } })
         return result;
 
@@ -103,13 +103,25 @@ module.exports = {
 
 
     addUser: async (firstname, lastname, email, username, hashedPwd) => {
-        const password = hashedPwd
-        await client.db("mobile").collection("Cartmobile").insertOne({ cart: [] });
-        const cartId = await client.db("mobile").collection("Cartmobile").find().sort({ _id: -1 }).limit(1).toArray();
-        const result = await client.db("mobile").collection("users")
-            .insertOne({ firstname, lastname, email, username, password, favorites: [], cart: cartId[0]._id });
+        try {
+            const newCart = await new Cart({ cart: [] }).save();
+            const cartId = newCart._id;
 
-        return result;
+            const newUser = new User({
+                firstname,
+                lastname,
+                email,
+                username,
+                password: hashedPwd,
+                favorites: [],
+                cart: cartId
+            });
+
+            return newUser.save();
+        } catch (error) {
+            console.error('Error adding user:', error);
+            throw error;
+        }
     },
 
     deleteFavorites: async (_id, id) => {
@@ -133,57 +145,56 @@ module.exports = {
 
 
     MobileDetails: async (_id) => {
-        return await client.db("mobile").collection("Cartmobile").aggregate([
+
+        return await Cart.aggregate([
             {
-                $match: {
-                    _id: new ObjectID(_id),
-                },
+              $match: {
+                _id: new mongoose.Types.ObjectId(_id), // Make sure you are using the correct ObjectId constructor
+              },
             },
             {
-                $lookup:
-                {
-                    from: "phones",
-                    localField: "cart._id",
-                    foreignField: "_id",
-                    as: "cart"
-
-                }
-            }
-        ]).toArray();
+              $lookup: {
+                from: "phones",
+                localField: "cart._id",
+                foreignField: "_id",
+                as: "cart",
+              },
+            },
+          ]);
     },
 
     getCart: async (_id) => {
-        return await client.db("mobile").collection("Cartmobile").findOne({ _id });
+        return await Cart.findOne({_id: new mongoose.Types.ObjectId(_id)});
     },
 
     deleteFromcart: async (_id, id) => {
-        const result = await client.db("mobile").collection("Cartmobile").aggregate([
+        const result = await Cart.aggregate([
             {
-                $match: { _id: new ObjectID(_id) }
+                $match: { _id: new mongoose.Types.ObjectId(_id) }
             },
             {
                 $project: {
                     cartIndex: {
-                        $indexOfArray: ["$cart._id", new ObjectID(id)]
+                        $indexOfArray: ["$cart._id", new mongoose.Types.ObjectId(id)]
                     },
-                    itemCount: { $arrayElemAt: ["$cart.count", { $indexOfArray: ["$cart._id", new ObjectID(id)] }] }
+                    itemCount: { $arrayElemAt: ["$cart.count", { $indexOfArray: ["$cart._id", new mongoose.Types.ObjectId(id)] }] }
                 }
             }
-        ]).toArray();
+        ]);
 
         return result;
     },
 
 
     deleteObjectcart: async (_id, cartIndex) => {
-        await client.db("mobile").collection("Cartmobile").updateOne(
-            { _id: new ObjectID(_id) },
+         await Cart.updateOne(
+            { _id: new mongoose.Types.ObjectId(_id) },
             {
                 $unset: { [`cart.${cartIndex}`]: 1 }
             }
         );
-        await client.db("mobile").collection("Cartmobile").updateOne(
-            { _id: new ObjectID(_id) },
+         await Cart.updateOne(
+            { _id: new mongoose.Types.ObjectId(_id) },
             {
                 $pull: { cart: null }
             }
@@ -192,8 +203,8 @@ module.exports = {
     },
 
     cartUpdate: async (_id, id, count) => {
-        await client.db("mobile").collection("Cartmobile").updateOne(
-            { _id: new ObjectID(_id), "cart._id": new ObjectID(id) },
+         await Cart.updateOne(
+            { _id: new mongoose.Types.ObjectId(_id), "cart._id": new mongoose.Types.ObjectId(id) },
             {
                 $set: { "cart.$.count": count }
             }

@@ -26,6 +26,7 @@ require('dotenv').config({ path: "./config.env" });
 
 
 
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads');
@@ -56,20 +57,24 @@ app.post('/userMatch', async (req, res) => {
       if (match) {
         const cookieValid = TokenCheck(cookie);
         if (!cookieValid) {
+
           const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
           res.status(200).cookie("token", token, { httpOnly: true, sameSite: 'None', secure: true });
           res.status(200).cookie("_id", user._id, { httpOnly: true, sameSite: 'None', secure: true });
           res.status(200).json(userWithDirector);
         }
         else {
+
           res.status(200).cookie("_id", user._id, { httpOnly: true, sameSite: 'None', secure: true });
           res.status(200).json(userWithDirector);
         }
       } else {
+
         const user = []
         res.status(200).json(user);
       }
     } else {
+
       const user = []
       res.status(200).json(user);
     }
@@ -232,7 +237,7 @@ router.get('/getCart', async (req, res) => {
 
   try {
     let _id = req.query._id;
-    const cart = await getCart(new ObjectID(_id));
+    const cart = await getCart(_id);
     if (cart) {
       res.status(200).json(cart);
     } else {
@@ -270,7 +275,7 @@ router.get('/addCart', async (req, res) => {
   let id = req.query.id;
 
   try {
-    await addCart(new ObjectID(_id), id);
+    await addCart(_id, id);
     res.status(200).json({ message: 'Cart updated successfully' });
   } catch (e) {
     console.error(e);
@@ -295,32 +300,6 @@ app.post('/CreatingUser', async (req, res) => {
     res.status(500).json({ error: e.message })
   }
 })
-
-
-// app.get('/userMatch', async (req, res) => {
-
-//   try {
-//     let username = req.query.username;
-//     let password = req.query.password;
-//     const user = await UsernameCheck(username);
-
-//     if (user.length === 0) {
-//       return res.status(404).json({ error: 'User not found' });
-//     }
-
-//     const match = bcrypt.compareSync(password, user[0].password);
-//     if (match) {
-//       res.status(200).json(user);
-//     }
-//     else {
-//       const user = []
-//       res.status(200).json(user);
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({ error: e.message })
-//   }
-// })
 
 
 router.get('/UsernameCheck', async (req, res) => {
@@ -379,7 +358,6 @@ app.get('/localStorage', async (req, res) => {
     const username = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
 
     const match = bcrypt.compareSync(user.username, username);
-    // console.log("match==", match)
 
     if (!user) {
       res.status(404).json({ error: 'No listings found' });
