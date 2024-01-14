@@ -1,75 +1,70 @@
 require('dotenv').config({ path: "./config.env" });
 const { MongoClient } = require('mongodb');
 const client = new MongoClient("mongodb+srv://" + process.env.USERNAME_PASSWORD + "@cluster0.92quexa.mongodb.net/");
-const ObjectID = require('mongodb').ObjectId;
+// const ObjectID = require('mongodb').ObjectId;
 const jwt = require('jsonwebtoken');
 const { Cart, User, Phone, Category } = require('./userModel');
 const mongoose = require('mongoose');
-// mongoose.connect("mongodb+srv://" + process.env.USERNAME_PASSWORD + "@cluster0.92quexa.mongodb.net/mobile");
 
 module.exports = {
 
     getCategory: async () => {
-        const result = await client.db("mobile").collection('category').find().toArray();
+        const result = await Category.find();
 
         return result;
     },
 
 
     deleteCategory: async (_id) => {
-        const result = await client.db("mobile").collection('category').deleteOne({ "_id": new ObjectID(_id) });
+        const result = await Category.deleteOne({ "_id": new mongoose.Types.ObjectId(_id) });
 
         return result;
     },
 
     categoryUpdate: async (_id, category) => {
         if (_id.length < 11) {
-            const result = await client.db("mobile").collection('category').insertOne({ category: category })
+            const result = await Category.insertOne({ category: category })
             return result;
 
         } else {
-            const result = await client.db("mobile").collection('category').updateOne({ "_id": new ObjectID(_id) },
+            const result = await Category.updateOne({ "_id": new mongoose.Types.ObjectId(_id) },
                 { $set: { category: category } });
             return result;
         }
     },
 
     ProductUpdate: async (_id, name, priceNumber) => {
-        const result = await client.db("mobile").collection('phones').updateOne({ "_id": new ObjectID(_id) },
+        const result = await Phone.updateOne({ "_id": new mongoose.Types.ObjectId(_id) },
             { $set: { name: name, price: priceNumber } });
         return result;
     },
 
     deleteProduct: async (_id) => {
-        const result = await client.db("mobile").collection('phones').deleteOne({ "_id": new ObjectID(_id) });
+        const result = await Phone.deleteOne({ "_id": new mongoose.Types.ObjectId(_id) });
 
         return result;
     },
 
     getMobile: async () => {
-        const resultPhones = await client.db("mobile").collection('phones').find().toArray();
-        const resultAccessories = await client.db("mobile").collection('products').find().toArray();
+        const resultPhones = await Phone.find();
 
-        return resultPhones.concat(resultAccessories);
+        return resultPhones;
     },
 
     getUsers: async () => {
-        const result = await client.db("mobile").collection('users').find().toArray();
-
-        return result;
+        return await User.find();
     },
 
 
     UsernameCheck: async (username) => {
-        return await client.db("mobile").collection("users").findOne({ username: username });
+        return await User.findOne({ username: username });
 
     },
 
 
     addFavorites: async (_id, id) => {
 
-        await client.db("mobile").collection("users")
-            .updateOne({ _id: _id }, { $push: { favorites: new ObjectID(id) } });
+        await User.updateOne({ _id: _id }, { $push: { favorites: new mongoose.Types.ObjectId(id) } });
     },
 
 
@@ -85,7 +80,6 @@ module.exports = {
             );
         } else {
             await Cart.updateOne(
-              
                 { _id: _id },
                 { $push: { cart: { _id: new mongoose.Types.ObjectId(id), count: 1 } } }
             );
@@ -95,7 +89,7 @@ module.exports = {
 
     emptyCart: async (_id) => {
 
-        const result = await Cart.updateOne({ "_id": new ObjectID(_id) },
+        const result = await Cart.updateOne({ "_id": new mongoose.Types.ObjectId(_id) },
             { $set: { cart: [] } })
         return result;
 
@@ -126,15 +120,13 @@ module.exports = {
 
     deleteFavorites: async (_id, id) => {
 
-        await client.db("mobile").collection("users")
-            .updateOne({ _id: _id }, { $pull: { favorites: new ObjectID(id) } });
-
+        await User.updateOne({ _id: _id }, { $pull: { favorites: new mongoose.Types.ObjectId(id) } });
 
     },
 
     localStorage: async (_id) => {
 
-        const user = await client.db("mobile").collection("users").findOne({ _id });
+        const user = await User.findOne({ _id: new mongoose.Types.ObjectId(_id) });
 
         if (user) {
             return user;
@@ -148,9 +140,7 @@ module.exports = {
 
         return await Cart.aggregate([
             {
-              $match: {
-                _id: new mongoose.Types.ObjectId(_id), // Make sure you are using the correct ObjectId constructor
-              },
+              $match: { _id: new mongoose.Types.ObjectId(_id)},
             },
             {
               $lookup: {
@@ -213,18 +203,18 @@ module.exports = {
 
 
     addProduct: async (selectedFileBase64, name, priceNumber, category) => {
-        const result = await client.db("mobile").collection("phones").insertOne({
+        const result = await Phone.insertOne({
             src: selectedFileBase64,
             name: name,
             price: priceNumber,
-            category: new ObjectID(category)
+            category: new mongoose.Types.ObjectId(category)
         });
         return result;
     },
 
     addCategory: async (category) => {
 
-        const result = await client.db("mobile").collection("category").insertOne({ category: category });
+        const result = await Category.insertOne({ category: category });
 
         return result;
     },

@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express()
 const router = express.Router();
-const ObjectID = require('mongodb').ObjectId;
+// const ObjectID = require('mongodb').ObjectId;
 const cors = require('cors');
 app.use(cors({
   credentials: true,
@@ -42,7 +42,7 @@ app.post('/userMatch', async (req, res) => {
   try {
     const { username, password } = req.body;
     const cookie = req.cookies["token"];
-    const usernameDirector = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
+    const usernameDirector = "$2b$10$xJ3RUU8EMgkQ8AaYlfRLkeGqdMpYhnAutv0asx3fqOaXt/sYRkjzi";
 
     const user = await UsernameCheck(username);
 
@@ -51,7 +51,7 @@ app.post('/userMatch', async (req, res) => {
       const match = bcrypt.compareSync(password, user.password);
 
       const userWithDirector = {
-        ...user,
+        ...user._doc,
         Director: matchUsername
       };
       if (match) {
@@ -89,6 +89,7 @@ app.post('/userMatch', async (req, res) => {
 app.get('/getMobile', async (req, res) => {
   try {
     const mobiles = await getMobile();
+
     if (mobiles) {
       res.status(200).json(mobiles);
     } else {
@@ -220,7 +221,7 @@ router.get('/MobileDetails', async (req, res) => {
 
   try {
     let _id = req.query._id;
-    const cart = await MobileDetails(new ObjectID(_id));
+    const cart = await MobileDetails(_id);
     if (cart) {
       res.status(200).json(cart);
     } else {
@@ -254,7 +255,6 @@ router.get('/getCart', async (req, res) => {
 app.get('/getUsers', async (req, res) => {
   try {
     const cookie = req.cookies["token"];
-    // console.log( process.env.JWT_SECRET, "260")
     jwt.verify(cookie, process.env.JWT_SECRET);
     const users = await getUsers();
     if (users) {
@@ -307,6 +307,8 @@ router.get('/UsernameCheck', async (req, res) => {
     let username = req.query.username;
 
     const user = await UsernameCheck(username);
+    // console.log(user)
+
     if (user) {
       res.status(200).json({ available: true });
     } else {
@@ -354,7 +356,7 @@ app.get('/localStorage', async (req, res) => {
 
   try {
     let _id = req.cookies["_id"];
-    const user = await localStorage(new ObjectID(_id));
+    const user = await localStorage(_id);
     const username = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
 
     const match = bcrypt.compareSync(user.username, username);
@@ -364,9 +366,10 @@ app.get('/localStorage', async (req, res) => {
     } else {
       if (match) {
         const userWithDirector = {
-          ...user,
+          ...user._doc,
           Director: match
         };
+
         res.status(200).json(userWithDirector);
       } else {
         res.status(200).json(user);
