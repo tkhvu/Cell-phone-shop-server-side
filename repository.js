@@ -1,6 +1,6 @@
 require('dotenv').config({ path: "./config.env" });
-const { MongoClient } = require('mongodb');
-const client = new MongoClient("mongodb+srv://" + process.env.USERNAME_PASSWORD + "@cluster0.92quexa.mongodb.net/");
+// const { MongoClient } = require('mongodb');
+// const client = new MongoClient("mongodb+srv://" + process.env.USERNAME_PASSWORD + "@cluster0.92quexa.mongodb.net/");
 // const ObjectID = require('mongodb').ObjectId;
 const jwt = require('jsonwebtoken');
 const { Cart, User, Phone, Category } = require('./userModel');
@@ -23,7 +23,10 @@ module.exports = {
 
     categoryUpdate: async (_id, category) => {
         if (_id.length < 11) {
-            const result = await Category.insertOne({ category: category })
+            const newCategory = new Category({
+                category: category
+            });
+            const result = await newCategory.save();
             return result;
 
         } else {
@@ -203,21 +206,27 @@ module.exports = {
 
 
     addProduct: async (selectedFileBase64, name, priceNumber, category) => {
-        const result = await Phone.insertOne({
+        // const result = await Phone.insertOne({
+        //     src: selectedFileBase64,
+        //     name: name,
+        //     price: priceNumber,
+        //     category: new mongoose.Types.ObjectId(category)
+        // });
+        const newPhone = new Phone({
             src: selectedFileBase64,
             name: name,
             price: priceNumber,
             category: new mongoose.Types.ObjectId(category)
         });
-        return result;
+        return await newPhone.save();
     },
 
-    addCategory: async (category) => {
+//     addCategory: async (category) => {
 
-        const result = await Category.insertOne({ category: category });
-
-        return result;
-    },
+//         const result = await Category.insertOne({ category: category });
+// console.log(221)
+//         return result;
+//     },
 
     TokenCheck(cookie) {
         try {

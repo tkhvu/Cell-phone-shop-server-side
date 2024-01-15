@@ -51,9 +51,9 @@ const User = mongoose.model('users', userSchema);
 
 const phoneSchema = new Schema({
     name: { type: String, required: true},
-    Price: { type: Number, required: true},
+    price: { type: Number, required: true},
     src: { type: String, required: true},
-    Category: { type: Schema.Types.ObjectId, required: true, ref: 'Category'  }
+    category: { type: Schema.Types.ObjectId, required: true, ref: 'Category'  }
   });
   
   const Phone = mongoose.model('phones', phoneSchema);

@@ -9,7 +9,7 @@ app.use(cors({
 }))
 app.use('/', router);
 app.use(express.json());
-const { getMobile, addFavorites, addUser, emptyCart, getUsers, addCategory, categoryUpdate, UsernameCheck,
+const { getMobile, addFavorites, addUser, emptyCart, getUsers, categoryUpdate, UsernameCheck,
   localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails,
   deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory, TokenCheck } = require("./repository");
 const { SENDMAIL } = require("./email");
@@ -494,21 +494,21 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   }
 });
 
-app.post('/addCategory', async (req, res) => {
-  try {
-    const { category } = req.body;
+// app.post('/addCategory', async (req, res) => {
+//   try {
+//     const { category } = req.body;
 
-    const result = await addCategory(category);
-    if (result) {
-      res.status(200).json(result);
-    } else {
-      res.status(404).json({ error: 'No listings found' });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
-})
+//     const result = await addCategory(category);
+//     if (result) {
+//       res.status(200).json(result);
+//     } else {
+//       res.status(404).json({ error: 'No listings found' });
+//     }
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).json({ error: e.message })
+//   }
+// })
 
 
 
