@@ -1,7 +1,4 @@
 require('dotenv').config({ path: "./config.env" });
-// const { MongoClient } = require('mongodb');
-// const client = new MongoClient("mongodb+srv://" + process.env.USERNAME_PASSWORD + "@cluster0.92quexa.mongodb.net/");
-// const ObjectID = require('mongodb').ObjectId;
 const jwt = require('jsonwebtoken');
 const { Cart, User, Phone, Category } = require('./userModel');
 const mongoose = require('mongoose');
@@ -60,6 +57,7 @@ module.exports = {
 
 
     UsernameCheck: async (username) => {
+
         return await User.findOne({ username: username });
 
     },
@@ -67,7 +65,7 @@ module.exports = {
 
     addFavorites: async (_id, id) => {
 
-        await User.updateOne({ _id: _id }, { $push: { favorites: new mongoose.Types.ObjectId(id) } });
+        await User.updateOne({ _id: new mongoose.Types.ObjectId(_id) }, { $push: { favorites: new mongoose.Types.ObjectId(id) } });
     },
 
 

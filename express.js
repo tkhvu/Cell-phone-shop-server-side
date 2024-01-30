@@ -1,11 +1,10 @@
 const express = require('express');
 const app = express()
 const router = express.Router();
-// const ObjectID = require('mongodb').ObjectId;
 const cors = require('cors');
 app.use(cors({
   credentials: true,
-  origin: ['http://localhost:4200', "http://localhost:54925", "https://api-pi72mex7aq-uc.a.run.app", "https://ringtones-79130.firebaseapp.com"]
+  origin: ['http://localhost:4200', "http://localhost:64784", "https://api-pi72mex7aq-uc.a.run.app", "https://ringtones-79130.firebaseapp.com"]
 }))
 app.use('/', router);
 app.use(express.json());
@@ -45,7 +44,6 @@ app.post('/userMatch', async (req, res) => {
     const usernameDirector = "$2b$10$xJ3RUU8EMgkQ8AaYlfRLkeGqdMpYhnAutv0asx3fqOaXt/sYRkjzi";
 
     const user = await UsernameCheck(username);
-
     if (user) {
       const matchUsername = bcrypt.compareSync(username, usernameDirector);
       const match = bcrypt.compareSync(password, user.password);
@@ -59,6 +57,7 @@ app.post('/userMatch', async (req, res) => {
         if (!cookieValid) {
 
           const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
           res.status(200).cookie("token", token, { httpOnly: true, sameSite: 'None', secure: true });
           res.status(200).cookie("_id", user._id, { httpOnly: true, sameSite: 'None', secure: true });
           res.status(200).json(userWithDirector);
@@ -70,12 +69,12 @@ app.post('/userMatch', async (req, res) => {
         }
       } else {
 
-        const user = []
+        const user = false
         res.status(200).json(user);
       }
     } else {
 
-      const user = []
+      const user = false
       res.status(200).json(user);
     }
   } catch (e) {
@@ -262,9 +261,9 @@ app.get('/getUsers', async (req, res) => {
     } else {
       res.status(404).json({ error: 'No listings found' });
     }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message })
   }
 })
 
@@ -327,7 +326,7 @@ router.get('/addFavorites', async (req, res) => {
 
   try {
 
-    await addFavorites(new ObjectID(_id), id)
+    await addFavorites(_id, id)
     res.status(200).json({ message: 'favorites updated successfully' });
   } catch (e) {
     console.error(e);
@@ -356,6 +355,7 @@ app.get('/localStorage', async (req, res) => {
 
   try {
     let _id = req.cookies["_id"];
+    console.log("_id==", _id)
     const user = await localStorage(_id);
     const username = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
 
