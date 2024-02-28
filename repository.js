@@ -121,7 +121,7 @@ module.exports = {
 
     deleteFavorites: async (_id, id) => {
 
-        await User.updateOne({ _id: _id }, { $pull: { favorites: new mongoose.Types.ObjectId(id) } });
+        await User.updateOne({ _id: new mongoose.Types.ObjectId(_id) }, { $pull: { favorites: new mongoose.Types.ObjectId(id) } });
 
     },
 

@@ -4,14 +4,15 @@ const router = express.Router();
 const cors = require('cors');
 app.use(cors({
   credentials: true,
-  origin: ['http://localhost:4200', "http://localhost:64784", "https://api-pi72mex7aq-uc.a.run.app", "https://ringtones-79130.firebaseapp.com"]
+  origin: ['http://localhost:4200', "http://localhost:64784", "https://api-pi72mex7aq-uc.a.run.app", 
+  "https://online-shop-491d5.firebaseapp.com"]
 }))
 app.use('/', router);
 app.use(express.json());
-const { getMobile, addFavorites, addUser, emptyCart, getUsers, categoryUpdate, UsernameCheck,
+const { addFavorites, addUser, emptyCart, getUsers, categoryUpdate, UsernameCheck,
   localStorage, deleteProduct, ProductUpdate, getCategory, addCart, addProduct, deleteFromcart, MobileDetails,
-  deleteFavorites, getCart, deleteObjectcart, cartUpdate, deleteCategory, TokenCheck } = require("./repository");
-const { SENDMAIL } = require("./email");
+   getCart, deleteObjectcart, cartUpdate, deleteCategory, TokenCheck } = require("./repository");
+const { sendEmail } = require("./email/email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
@@ -23,7 +24,11 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser())
 require('dotenv').config({ path: "./config.env" });
 
+const {deleteFavorites} = require('./controllers/favoritesController');
+const {getMobile} = require('./controllers/mobileController');
 
+app.get('/deleteFavorites', deleteFavorites);
+app.get('/getMobile', getMobile)
 
 
 const storage = multer.diskStorage({
@@ -85,20 +90,20 @@ app.post('/userMatch', async (req, res) => {
 })
 
 
-app.get('/getMobile', async (req, res) => {
-  try {
-    const mobiles = await getMobile();
+// app.get('/getMobile', async (req, res) => {
+//   try {
+//     const mobiles = await getMobile();
 
-    if (mobiles) {
-      res.status(200).json(mobiles);
-    } else {
-      res.status(404).json({ error: 'No listings found' });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
-})
+//     if (mobiles) {
+//       res.status(200).json(mobiles);
+//     } else {
+//       res.status(404).json({ error: 'No listings found' });
+//     }
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).json({ error: e.message })
+//   }
+// })
 
 router.get('/getCategory', async (req, res) => {
   try {
@@ -206,7 +211,7 @@ app.post('/Emailorderconfirmation', (req, res) => {
     const { firstname, lastname, email } = req.body.user;
     const orderedPhoneDetails = req.body.orders;
     const { phone, City, Street, Housenumber, Apartmentnumber } = req.body.DeliveryDetails;
-    SENDMAIL(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
+    sendEmail(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
     res.status(200).json('Email sent successfully');
   } catch (e) {
     console.error(e);
@@ -336,26 +341,26 @@ router.get('/addFavorites', async (req, res) => {
 })
 
 
-router.get('/deleteFavorites', async (req, res) => {
+// router.get('/deleteFavorites', async (req, res) => {
 
-  let _id = req.query._id;
-  let id = req.query.id;
+//   let _id = req.query._id;
+//   let id = req.query.id;
 
-  try {
-    await deleteFavorites(new ObjectID(_id), id)
-    res.status(200).json({ message: 'favorites updated successfully' });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
+//   try {
+//     await deleteFavorites(_id, id)
+//     res.status(200).json({ message: 'favorites updated successfully' });
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).json({ error: e.message })
+//   }
 
-})
+// })
 
 app.get('/localStorage', async (req, res) => {
 
   try {
     let _id = req.cookies["_id"];
-    console.log("_id==", _id)
+    // console.log("_id==", _id)
     const user = await localStorage(_id);
     const username = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
 
