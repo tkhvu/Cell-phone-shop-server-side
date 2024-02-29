@@ -2,6 +2,7 @@ require('dotenv').config({ path: "./config.env" });
 const jwt = require('jsonwebtoken');
 const { Cart, User, Phone, Category } = require('./userModel');
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 module.exports = {
 
@@ -53,13 +54,6 @@ module.exports = {
 
     getUsers: async () => {
         return await User.find();
-    },
-
-
-    UsernameCheck: async (username) => {
-
-        return await User.findOne({ username: username });
-
     },
 
 
@@ -236,4 +230,21 @@ module.exports = {
             return false;
         }
     },
+
+
+    findUser: async (username) => {
+
+        return await User.findOne({ username: username });
+
+    },
+
+     authenticateUser : async ({ username, password }) => {
+        const user = await User.findOne({ username: username });
+        if (!user) return null;
+    
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) return null;
+    
+        return user; 
+    }
 }
