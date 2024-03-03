@@ -4,184 +4,46 @@ const router = express.Router();
 const cors = require('cors');
 app.use(cors({
   credentials: true,
-  origin: ['http://localhost:4200', "http://localhost:64784", "https://api-pi72mex7aq-uc.a.run.app", 
+  origin: ['http://localhost:4200', "https://api-pi72mex7aq-uc.a.run.app", 
   "https://online-shop-491d5.firebaseapp.com"]
 }))
 app.use('/', router);
 app.use(express.json());
-const { addFavorites, addUser, getUsers, categoryUpdate, findUser,
-  localStorage, deleteProduct, ProductUpdate, addCart, addProduct, deleteFromcart, MobileDetails,
-   getCart, deleteObjectcart, cartUpdate, TokenCheck } = require("./repository");
-const { sendEmail } = require("./email/email");
+const { addFavorites, getUsers, findUser, addCart, addProduct, deleteFromcart, MobileDetails,
+   getCart, deleteObjectcart, cartUpdate } = require("./repository");
+// const { sendEmail } = require("./email/email");
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const fs = require('fs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-// const bcrypt = require('bcrypt');
-// const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 app.use(cookieParser())
 require('dotenv').config({ path: "./config.env" });
 
 const {deleteFavorites} = require('./controllers/favoritesController');
 const {getMobile} = require('./controllers/mobileController');
-const {getCategory, deleteCategory} = require('./controllers/categoryController');
+const {getCategory, deleteCategory, categoryUpdate} = require('./controllers/categoryController');
 const {emptyCart} = require('./controllers/cartController');
-const {matchUser} = require('./controllers/userController');
+const {matchUser, addUser, localStorage} = require('./controllers/userController');
+const { deleteProduct, ProductUpdate } = require('./controllers/productController');
+const {sendOrderConfirmationEmail} = require('./controllers/emailController');
 
 
-app.get('/deleteFavorites', deleteFavorites);
+app.delete('/deleteFavorites', deleteFavorites);
 app.get('/getMobile', getMobile);
 app.get('/getCategory', getCategory)
 app.get('/deleteCategory', deleteCategory)
 app.get('/emptyCart', emptyCart)
 app.post('/userMatch', matchUser)
-
-
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
-});
-const upload = multer({ storage });
-
-// app.post('/userMatch', async (req, res) => {
-
-//   try {
-//     const { username, password } = req.body;
-//     const cookie = req.cookies["token"];
-//     const usernameDirector = "$2b$10$xJ3RUU8EMgkQ8AaYlfRLkeGqdMpYhnAutv0asx3fqOaXt/sYRkjzi";
-
-//     const user = await findUser(username);
-//     if (user) {
-//       const matchUsername = bcrypt.compareSync(username, usernameDirector);
-//       const match = bcrypt.compareSync(password, user.password);
-
-//       const userWithDirector = {
-//         ...user._doc,
-//         Director: matchUsername
-//       };
-//       if (match) {
-//         const cookieValid = TokenCheck(cookie);
-//         if (!cookieValid) {
-
-//           const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-//           res.status(200).cookie("token", token, { httpOnly: true, sameSite: 'None', secure: true });
-//           res.status(200).cookie("_id", user._id, { httpOnly: true, sameSite: 'None', secure: true });
-//           res.status(200).json(userWithDirector);
-//         }
-//         else {
-
-//           res.status(200).cookie("_id", user._id, { httpOnly: true, sameSite: 'None', secure: true });
-//           res.status(200).json(userWithDirector);
-//         }
-//       } else {
-
-//         const user = false
-//         res.status(200).json(user);
-//       }
-//     } else {
-
-//       const user = false
-//       res.status(200).json(user);
-//     }
-//   } catch (e) {
-
-//     console.error(e);
-//     res.status(500).json({ error: e.message })
-//   }
-// })
-
-
-// router.get('/emptyCart', async (req, res) => {
-//   try {
-    
-//     const cart = await emptyCart(req.query._id);
-//     if (cart) {
-//       res.status(200).json(cart);
-//     } else {
-//       res.status(404).json({ error: 'No listings found' });
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({ error: e.message })
-//   }
-// })
-
-
-router.get('/categoryUpdate', async (req, res) => {
-  try {
-    let _id = req.query._id;
-    let category = req.query.category;
-    const Update = await categoryUpdate(_id, category);
-    if (Update) {
-      res.status(200).json(Update);
-    } else {
-      res.status(404).json({ error: 'No listings found' });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
-})
-
-router.get('/deleteProduct', async (req, res) => {
-  try {
-    let _id = req.query._id;
-    const category = await deleteProduct(_id);
-    if (category) {
-      res.status(200).json(category);
-    } else {
-      res.status(404).json({ error: 'No listings found' });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
-})
-
-router.get('/ProductUpdate', async (req, res) => {
-  try {
-    let _id = req.query._id;
-    let name = req.query.name;
-    let price = req.query.price;
-
-    const priceNumber = parseInt(price);
-
-    const Update = await ProductUpdate(_id, name, priceNumber);
-    if (Update) {
-      res.status(200).json(Update);
-    } else {
-      res.status(404).json({ error: 'No listings found' });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
-})
-
-app.post('/Emailorderconfirmation', (req, res) => {
-  try {
-    const cookie = req.cookies["token"];
-    jwt.verify(cookie, process.env.JWT_SECRET);
-
-    const { firstname, lastname, email } = req.body.user;
-    const orderedPhoneDetails = req.body.orders;
-    const { phone, City, Street, Housenumber, Apartmentnumber } = req.body.DeliveryDetails;
-    sendEmail(firstname, lastname, email, orderedPhoneDetails, phone, City, Street, Housenumber, Apartmentnumber);
-    res.status(200).json('Email sent successfully');
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message });
-  }
-});
-
+app.post('/CreatingUser', addUser)
+app.get('/localStorage', localStorage)
+app.get('/categoryUpdate', categoryUpdate)
+app.delete('/deleteProduct', deleteProduct)
+app.get('/ProductUpdate', ProductUpdate)
+app.post('/Emailorderconfirmation', sendOrderConfirmationEmail)
 
 
 router.get('/MobileDetails', async (req, res) => {
@@ -251,24 +113,6 @@ router.get('/addCart', async (req, res) => {
 })
 
 
-app.post('/CreatingUser', async (req, res) => {
-
-  try {
-    const { firstname, lastname, email, username, password } = req.body;
-    const hashedPwd = await bcrypt.hash(password, 10);
-    const result = await addUser(firstname, lastname, email, username, hashedPwd);
-    if (result) {
-      res.status(200).json(result);
-    } else {
-      res.status(404).json({ error: 'No updated' });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
-})
-
-
 router.get('/UsernameCheck', async (req, res) => {
   try {
     let username = req.query.username;
@@ -301,52 +145,6 @@ router.get('/addFavorites', async (req, res) => {
     res.status(500).json({ error: e.message })
   }
 
-})
-
-
-// router.get('/deleteFavorites', async (req, res) => {
-
-//   let _id = req.query._id;
-//   let id = req.query.id;
-
-//   try {
-//     await deleteFavorites(_id, id)
-//     res.status(200).json({ message: 'favorites updated successfully' });
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({ error: e.message })
-//   }
-
-// })
-
-app.get('/localStorage', async (req, res) => {
-
-  try {
-    let _id = req.cookies["_id"];
-    // console.log("_id==", _id)
-    const user = await localStorage(_id);
-    const username = "$2b$10$/oOfWYa3EGBsvGhPQv8NaOdq3eX7mfdBtBaSmiLjmOT4mQ/X6WN/u";
-
-    const match = bcrypt.compareSync(user.username, username);
-
-    if (!user) {
-      res.status(404).json({ error: 'No listings found' });
-    } else {
-      if (match) {
-        const userWithDirector = {
-          ...user._doc,
-          Director: match
-        };
-
-        res.status(200).json(userWithDirector);
-      } else {
-        res.status(200).json(user);
-      }
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message })
-  }
 })
 
 
@@ -419,7 +217,15 @@ router.get('/cartUpdate', async (req, res) => {
 })
 
 
-
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+const upload = multer({ storage });
 
 
 app.post('/upload', upload.single('image'), async (req, res) => {
@@ -482,47 +288,3 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT);
-// app.get('/getMobile', async (req, res) => {
-//   try {
-//     const mobiles = await getMobile();
-
-//     if (mobiles) {
-//       res.status(200).json(mobiles);
-//     } else {
-//       res.status(404).json({ error: 'No listings found' });
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({ error: e.message })
-//   }
-// })
-
-// router.get('/getCategory', async (req, res) => {
-//   try {
-//     const category = await getCategory();
-//     if (category) {
-//       res.status(200).json(category);
-//     } else {
-//       res.status(404).json({ error: 'No listings found' });
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({ error: e.message })
-//   }
-// })
-
-
-// router.get('/deleteCategory', async (req, res) => {
-//   try {
-//     let _id = req.query._id;
-//     const category = await deleteCategory(_id);
-//     if (category) {
-//       res.status(200).json(category);
-//     } else {
-//       res.status(404).json({ error: 'No listings found' });
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).json({ error: e.message })
-//   }
-// })

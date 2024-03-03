@@ -44,6 +44,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   favorites: [{ type: Schema.Types.ObjectId, ref: 'Favorite' }],
   cart: { type: Schema.Types.ObjectId, ref: 'Cart' },
+  Director: { type: Boolean, required: true },
 });
 
 const User = mongoose.model('users', userSchema);

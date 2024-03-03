@@ -1,4 +1,4 @@
-const { getCategory, deleteCategory } = require("../repository");
+const { getCategory, deleteCategory, categoryUpdate } = require("../repository");
 
 module.exports = {
     getCategory: async (req, res) => {
@@ -28,5 +28,21 @@ module.exports = {
             console.error(error);
             res.status(500).json({ error: error.message });
         }
-    }
+    },
+
+    categoryUpdate : async (req, res) => {
+        try {
+
+          const Update = await categoryUpdate(req.query);
+
+          if (Update) {
+            res.status(200).json(Update);
+          } else {
+            res.status(404).json({ error: 'The update failed' });
+          }
+        } catch (e) {
+          console.error(e);
+          res.status(500).json({ error: e.message })
+        }
+      },
 }

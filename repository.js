@@ -19,7 +19,8 @@ module.exports = {
         return result;
     },
 
-    categoryUpdate: async (_id, category) => {
+    categoryUpdate: async ({_id, category}) => {
+   
         if (_id.length < 11) {
             const newCategory = new Category({
                 category: category
@@ -103,7 +104,8 @@ module.exports = {
                 username,
                 password: hashedPwd,
                 favorites: [],
-                cart: cartId
+                cart: cartId,
+                Director: false
             });
 
             return newUser.save();
