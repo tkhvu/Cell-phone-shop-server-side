@@ -18,13 +18,13 @@ const cartmobileSchema = new mongoose.Schema({
 const cartItemSchema = new Schema({
   _id: {
     type: Schema.Types.ObjectId,
-    ref: 'phones', // Assuming 'Item' is another schema you want to reference
+    ref: 'phones',
   },
   count: {
     type: Number,
     default: 1,
   }
-}, { _id: false }); // Use "_id: false" if you don't want Mongoose to create an _id for sub-documents
+}, { _id: false }); 
 
 
 const cartSchema = new Schema({

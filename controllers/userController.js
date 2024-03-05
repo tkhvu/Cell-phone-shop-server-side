@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { authenticateUser, TokenCheck, addUser, localStorage } = require("../repository");
+const { authenticateUser, TokenCheck, addUser, localStorage, UsersDetails, UserameCheck } = require("../repository");
 
 
 module.exports = {
@@ -12,7 +12,6 @@ module.exports = {
             const user = await authenticateUser(req.body);
 
             if (user) {
-                // const matchUsername = bcrypt.compareSync(user.username, process.env.USERNAME_DIRECTOR);
 
                 const userWithDirector = {
                     ...user._doc,
@@ -80,5 +79,37 @@ module.exports = {
             console.error(e);
             res.status(500).json({ error: e.message })
         }
-    }
+    }, 
+
+    getUsers :async (req, res) => {
+        try {
+          const cookie = req.cookies["token"];
+          jwt.verify(cookie, process.env.JWT_SECRET);
+          const users = await UsersDetails();
+          if (users) {
+            res.status(200).json(users);
+          } else {
+            res.status(404).json({ error: 'No listings found' });
+          }
+        } catch (error) {
+          console.error(error);
+          res.status(500).json({ error: error.message })
+        }
+      },
+
+      findUser: async (req, res) => {
+        try {
+      
+          const user = await UserameCheck(req.query.username);
+      
+          if (user) {
+            res.status(200).json({ available: true });
+          } else {
+            res.status(200).json({ available: false });
+          }
+        } catch (e) {
+          console.error(e);
+          res.status(500).json({ error: e.message });
+        }
+      }
 }

@@ -53,19 +53,19 @@ module.exports = {
         return resultPhones;
     },
 
-    getUsers: async () => {
+    UsersDetails: async () => {
         return await User.find();
     },
 
 
-    addFavorites: async (_id, id) => {
+    addToFavorites: async ({_id, id}) => {
 
         await User.updateOne({ _id: new mongoose.Types.ObjectId(_id) }, { $push: { favorites: new mongoose.Types.ObjectId(id) } });
     },
 
 
 
-    addCart: async (_id, id) => {
+    addToCart: async (_id, id) => {
 
         const cartExists = await Cart.findOne({ _id, "cart._id": new mongoose.Types.ObjectId(id) });
 
@@ -133,7 +133,7 @@ module.exports = {
     },
 
 
-    MobileDetails: async (_id) => {
+    aggregateProductDetails: async (_id) => {
 
         return await Cart.aggregate([
             {
@@ -150,11 +150,11 @@ module.exports = {
           ]);
     },
 
-    getCart: async (_id) => {
+    cartDetails: async (_id) => {
         return await Cart.findOne({_id: new mongoose.Types.ObjectId(_id)});
     },
 
-    deleteFromcart: async (_id, id) => {
+    findCartItemDetails: async (_id, id) => {
         const result = await Cart.aggregate([
             {
                 $match: { _id: new mongoose.Types.ObjectId(_id) }
@@ -200,12 +200,6 @@ module.exports = {
 
 
     addProduct: async (selectedFileBase64, name, priceNumber, category) => {
-        // const result = await Phone.insertOne({
-        //     src: selectedFileBase64,
-        //     name: name,
-        //     price: priceNumber,
-        //     category: new mongoose.Types.ObjectId(category)
-        // });
         const newPhone = new Phone({
             src: selectedFileBase64,
             name: name,
@@ -234,7 +228,7 @@ module.exports = {
     },
 
 
-    findUser: async (username) => {
+    UserameCheck: async (username) => {
 
         return await User.findOne({ username: username });
 
@@ -249,4 +243,7 @@ module.exports = {
     
         return user; 
     }
+
+
+    
 }
