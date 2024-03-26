@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
+
 const Product = require('../models/Product');
 
-const addProduct = async ({ selectedFileBase64, name, priceNumber, category }) => {
+
+const addProduct = async (selectedFileBase64, name, priceNumber, category) => {
     try {
         const newPhone = new Product({
             src: selectedFileBase64,
-            name,
+            name: name,
             price: priceNumber,
             category: new mongoose.Types.ObjectId(category)
         });
