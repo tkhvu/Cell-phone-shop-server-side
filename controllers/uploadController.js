@@ -1,6 +1,6 @@
 const fs = require('fs');
 const multer = require('multer');
-const { addProduct } = require("../repository");
+const { addProduct } = require("../services/productService");
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

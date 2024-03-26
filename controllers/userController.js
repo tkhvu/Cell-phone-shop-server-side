@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { authenticateUser, TokenCheck, addUser, localStorage, UsersDetails, UserameCheck } = require("../repository");
+const { TokenCheck } = require('../services/authService');
+const {  authenticateUser, addUser, localStorage, UsersDetails, UserameCheck } = require('../services/userService');
 
 
 module.exports = {

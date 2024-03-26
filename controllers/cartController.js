@@ -1,4 +1,5 @@
-const { emptyCart, cartDetails, addToCart, findCartItemDetails, cartUpdate, deleteObjectcart } = require("../repository");
+const { emptyCart, cartDetails, addToCart, findCartItemDetails, cartUpdate, deleteObjectcart } = require('../services/cartService');
+
 
 module.exports = {
     emptyCart: async (req, res) => {

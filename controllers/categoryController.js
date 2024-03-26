@@ -1,4 +1,4 @@
-const { getCategory, deleteCategory, categoryUpdate } = require("../repository");
+const { getCategory, deleteCategory, categoryUpdate } = require('../services/categoryService');
 
 module.exports = {
     getCategory: async (req, res) => {
