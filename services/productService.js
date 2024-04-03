@@ -28,12 +28,14 @@ const deleteProduct = async (_id) => {
     }
 };
 
-const ProductUpdate = async ({ _id, name, priceNumber }) => {
+const ProductUpdate = async ( _id, name, priceNumber ) => {
     try {
+
         const result = await Product.updateOne(
             { "_id": new mongoose.Types.ObjectId(_id) },
-            { $set: { name, price: priceNumber } }
+            { $set: { name: name, price: priceNumber } }
         );
+
         return result;
     } catch (error) {
         console.error('Error updating product:', error);

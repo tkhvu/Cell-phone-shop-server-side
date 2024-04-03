@@ -53,9 +53,9 @@ module.exports = {
 
   ProductUpdate: async (req, res) => {
     try {
-      let _id = req.query._id;
-      let name = req.query.name;
-      let price = req.query.price;
+      const _id = req.query._id;
+      const name = req.query.name;
+      const price = req.query.price;
 
       const priceNumber = parseInt(price);
 
