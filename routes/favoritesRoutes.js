@@ -4,6 +4,7 @@ const { deleteFavorites, addFavorites } = require('../controllers/favoritesContr
 
 
 
+
 router.delete('/deleteFavorites', deleteFavorites);
 
 router.get('/addFavorites', addFavorites)
